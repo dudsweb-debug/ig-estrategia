@@ -13,9 +13,8 @@
 <div id="root"></div>
 <script type="text/babel">
 const SUPABASE_URL = "https://oiikkxokkqdxkoalwtkv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paWtreG9ra3FkeGtvYWx3dGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjQzMDcsImV4cCI6MjA5NjkwMDMwN30.z2dlcSTe7HEiLtzn3oE2LqjoNkkLEYNlAtZ-6yKorfU";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paWtreG9ya3FkeGtvYWx3dGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjQzMDcsImV4cCI6MjA5NjkwMDMwN30.z2dlcSTe7HEiLtzn3oE2LqjoNkkLEYNlAtZ-6yKorfU";
 const CANVA_DESIGN_ID = "DAHMdIAbGwo";
-
 const { useState, useEffect, useRef } = React;
 
 async function sb(path, method="GET", body=null, extra={}) {
@@ -46,21 +45,62 @@ const T = {
   yellow:"#FFD166",text:"#F0EEF8",muted:"#8884A0",mutedLight:"#B8B4CC",
 };
 
-const METRICS = [
-  {key:"seguidores",label:"Seguidores",icon:"👥"},
-  {key:"alcance",label:"Alcance",icon:"📡"},
-  {key:"impressoes",label:"Impressões",icon:"👁"},
-  {key:"engajamento",label:"Engajamento (%)",icon:"💬"},
-  {key:"curtidas",label:"Curtidas",icon:"❤️"},
-  {key:"comentarios",label:"Comentários",icon:"🗨️"},
-  {key:"salvamentos",label:"Salvamentos",icon:"🔖"},
-  {key:"visitas_perfil",label:"Visitas ao Perfil",icon:"🔍"},
-  {key:"cliques_bio",label:"Cliques no Link",icon:"🔗"},
-  {key:"stories_views",label:"Stories Views",icon:"⭕"},
-  {key:"stories_respostas",label:"Stories Respostas",icon:"↩️"},
-  {key:"reels_views",label:"Reels Views",icon:"🎬"},
-  {key:"reels_compartilhamentos",label:"Reels Compartilhamentos",icon:"↗️"},
+// Campos organizados por grupo — espelha o Instagram Insights
+const METRIC_GROUPS = [
+  {
+    group: "geral", label: "Visão Geral", icon: "📊",
+    fields: [
+      {key:"seguidores", label:"Seguidores", icon:"👥"},
+      {key:"seguidores_liquidos", label:"Seguidores Líquidos", icon:"📈"},
+      {key:"alcance", label:"Contas Alcançadas", icon:"📡"},
+      {key:"impressoes", label:"Visualizações Totais", icon:"👁"},
+      {key:"visitas_perfil", label:"Visitas ao Perfil", icon:"🔍"},
+      {key:"cliques_bio", label:"Toques no Link da Bio", icon:"🔗"},
+      {key:"cliques_endereco", label:"Toques no Endereço", icon:"📍"},
+    ]
+  },
+  {
+    group: "posts", label: "Posts", icon: "🖼️",
+    fields: [
+      {key:"posts_views", label:"Visualizações", icon:"👁"},
+      {key:"posts_curtidas", label:"Curtidas", icon:"❤️"},
+      {key:"posts_comentarios", label:"Comentários", icon:"🗨️"},
+      {key:"posts_compartilhamentos", label:"Compartilhamentos", icon:"↗️"},
+      {key:"posts_salvamentos", label:"Salvamentos", icon:"🔖"},
+      {key:"posts_reposts", label:"Reposts", icon:"🔁"},
+    ]
+  },
+  {
+    group: "reels", label: "Reels", icon: "🎬",
+    fields: [
+      {key:"reels_views", label:"Visualizações", icon:"👁"},
+      {key:"reels_curtidas", label:"Curtidas", icon:"❤️"},
+      {key:"reels_comentarios", label:"Comentários", icon:"🗨️"},
+      {key:"reels_compartilhamentos", label:"Compartilhamentos", icon:"↗️"},
+      {key:"reels_salvamentos", label:"Salvamentos", icon:"🔖"},
+    ]
+  },
+  {
+    group: "stories", label: "Stories", icon: "⭕",
+    fields: [
+      {key:"stories_views", label:"Visualizações", icon:"👁"},
+      {key:"stories_curtidas", label:"Curtidas", icon:"❤️"},
+      {key:"stories_respostas", label:"Respostas", icon:"↩️"},
+      {key:"stories_compartilhamentos", label:"Compartilhamentos", icon:"↗️"},
+    ]
+  },
+  {
+    group: "lives", label: "Lives", icon: "📡",
+    fields: [
+      {key:"lives_views", label:"Visualizações", icon:"👁"},
+      {key:"lives_curtidas", label:"Curtidas", icon:"❤️"},
+      {key:"lives_comentarios", label:"Comentários", icon:"🗨️"},
+    ]
+  },
 ];
+
+// Lista flat para compatibilidade
+const METRICS = METRIC_GROUPS.flatMap(g => g.fields);
 
 function fmtNum(n) {
   if(n===undefined||n===null||n==="") return "–";
@@ -78,52 +118,55 @@ function goalStatus(actual,goal) {
   const r=Number(actual)/Number(goal);
   return r>=1?"achieved":r>=0.8?"near":"behind";
 }
-async function imageToBase64(file) {
-  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=()=>rej(new Error("Falha"));r.readAsDataURL(file);});
-}
 async function callClaude(messages,system="") {
-  const body={model:"claude-sonnet-4-6",max_tokens:1000,messages};
+  const body={model:"claude-sonnet-4-6",max_tokens:1500,messages};
   if(system) body.system=system;
   const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   return (await res.json()).content?.[0]?.text||"";
 }
 
-function Btn({children,onClick,disabled,small,outline}) {
-  return <button onClick={onClick} disabled={disabled} style={{background:outline?"transparent":disabled?T.border:T.accentMid,color:disabled?T.muted:outline?T.mutedLight:T.text,border:outline?`1px solid ${T.border}`:"none",borderRadius:10,cursor:disabled?"not-allowed":"pointer",padding:small?"7px 14px":"11px 22px",fontSize:small?13:14,fontWeight:600,whiteSpace:"nowrap"}}>{children}</button>;
+function Btn({children,onClick,disabled,small,outline}){
+  return <button onClick={onClick} disabled={disabled} style={{background:outline?"transparent":disabled?T.border:T.accentMid,color:disabled?T.muted:outline?T.mutedLight:T.text,border:outline?"1px solid "+T.border:"none",borderRadius:10,cursor:disabled?"not-allowed":"pointer",padding:small?"7px 14px":"11px 22px",fontSize:small?13:14,fontWeight:600,whiteSpace:"nowrap"}}>{children}</button>;
 }
-function Field({label,value,onChange,placeholder,number,multiline}) {
-  const s={width:"100%",background:T.surface,border:`1px solid ${T.border}`,borderRadius:10,color:T.text,padding:"10px 14px",fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",resize:multiline?"vertical":undefined};
+function Field({label,value,onChange,placeholder,number,multiline}){
+  const s={width:"100%",background:T.surface,border:"1px solid "+T.border,borderRadius:10,color:T.text,padding:"10px 14px",fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",resize:multiline?"vertical":undefined};
   return <div style={{marginBottom:12}}>{label&&<label style={{fontSize:12,color:T.muted,display:"block",marginBottom:4}}>{label}</label>}{multiline?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={3} style={s}/>:<input type={number?"number":"text"} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={s}/>}</div>;
 }
-function BackBtn({onClick,label="← Voltar"}) {
-  return <button onClick={onClick} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,padding:"0 0 20px",display:"block"}}>{label}</button>;
+function BackBtn({onClick,label}){
+  return <button onClick={onClick} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,padding:"0 0 20px",display:"block"}}>{label||"← Voltar"}</button>;
 }
-function Spinner() {
-  return <div style={{width:32,height:32,border:`3px solid ${T.border}`,borderTopColor:T.accent,borderRadius:"50%",animation:"spin 1s linear infinite"}}/>;
+function Spinner(){
+  return <div style={{width:32,height:32,border:"3px solid "+T.border,borderTopColor:T.accent,borderRadius:"50%",animation:"spin 1s linear infinite"}}/>;
 }
-function Delta({curr,prev}) {
+function Delta({curr,prev}){
   const d=pct(curr,prev); if(d===null) return null;
   const up=Number(d)>=0;
   return <span style={{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red}}>{up?"▲":"▼"} {Math.abs(d)}%</span>;
 }
-function SparkBar({periods,metricKey}) {
+function SparkBar({periods,metricKey}){
   if(!periods||periods.length<2) return null;
   const vals=periods.map(p=>Number(p[metricKey])||0);
   const max=Math.max(...vals,1);
-  return <div style={{display:"flex",alignItems:"flex-end",gap:3,height:28}}>{vals.map((v,i)=><div key={i} style={{width:7,borderRadius:2,height:`${Math.max((v/max)*100,4)}%`,background:i===vals.length-1?T.accent:T.accentMid+"55"}}/>)}</div>;
+  return <div style={{display:"flex",alignItems:"flex-end",gap:3,height:28}}>{vals.map((v,i)=><div key={i} style={{width:7,borderRadius:2,height:Math.max((v/max)*100,4)+"%",background:i===vals.length-1?T.accent:T.accentMid+"55"}}/>)}</div>;
 }
-function GoalBar({actual,goal}) {
+function GoalBar({actual,goal}){
   if(!goal) return null;
   const ratio=Math.min(Number(actual||0)/Number(goal),1);
   const status=goalStatus(actual,goal);
   const color=status==="achieved"?T.green:status==="near"?T.yellow:T.accent;
-  return <div style={{marginTop:6}}><div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:T.muted,marginBottom:3}}><span>Meta: {fmtNum(goal)}</span><span style={{color}}>{status==="achieved"?"✓ Atingida":status==="near"?"⚡ Quase lá":`${Math.round(ratio*100)}%`}</span></div><div style={{height:4,borderRadius:4,background:T.border}}><div style={{height:"100%",width:`${ratio*100}%`,background:color,borderRadius:4,transition:"width .5s"}}/></div></div>;
+  return <div style={{marginTop:6}}><div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:T.muted,marginBottom:3}}><span>Meta: {fmtNum(goal)}</span><span style={{color}}>{status==="achieved"?"✓ Atingida":status==="near"?"⚡ Quase lá":Math.round(ratio*100)+"%"}</span></div><div style={{height:4,borderRadius:4,background:T.border}}><div style={{height:"100%",width:(ratio*100)+"%",background:color,borderRadius:4,transition:"width .5s"}}/></div></div>;
 }
-function Empty({icon,text,children}) {
-  return <div style={{border:`1.5px dashed ${T.border}`,borderRadius:16,padding:48,textAlign:"center"}}><div style={{fontSize:32,marginBottom:12}}>{icon}</div><div style={{color:T.mutedLight,fontSize:14,marginBottom:20}}>{text}</div>{children}</div>;
+function Empty({icon,text,children}){
+  return <div style={{border:"1.5px dashed "+T.border,borderRadius:16,padding:48,textAlign:"center"}}><div style={{fontSize:32,marginBottom:12}}>{icon}</div><div style={{color:T.mutedLight,fontSize:14,marginBottom:20}}>{text}</div>{children}</div>;
+}
+function SectionTitle({icon,label}){
+  return <div style={{display:"flex",alignItems:"center",gap:8,margin:"24px 0 12px",paddingBottom:8,borderBottom:"1px solid "+T.border}}>
+    <span style={{fontSize:16}}>{icon}</span>
+    <span style={{fontWeight:700,fontSize:14,color:T.mutedLight}}>{label}</span>
+  </div>;
 }
 
-function App() {
+export default function App(){
   const [view,setView]=useState("home");
   const [clients,setClients]=useState([]);
   const [client,setClient]=useState(null);
@@ -145,69 +188,71 @@ function App() {
     DB.getClients().then(c=>{setClients(c||[]);setLoading(false);}).catch(e=>{showError("Erro ao carregar: "+e.message);setLoading(false);});
   },[]);
 
-  async function selectClient(c) {
+  async function selectClient(c){
     setClient(c);setLoading(true);
     try{const [p,g]=await Promise.all([DB.getPeriods(c.id),DB.getGoals(c.id)]);setPeriods(p||[]);setGoals(g);}
     catch(e){showError("Erro: "+e.message);}
     setLoading(false);setView("client");setTab("overview");
   }
-  async function handleCreateClient(name,niche) {
+  async function handleCreateClient(name,niche){
     try{const rows=await DB.createClient(name,niche);const c=Array.isArray(rows)?rows[0]:rows;if(c){setClients(prev=>[...prev,c]);await selectClient(c);}else showError("Erro inesperado.");}
     catch(e){showError("Erro ao criar cliente: "+e.message);}
   }
-  async function handleDeleteClient(id) {
+  async function handleDeleteClient(id){
     try{await DB.deleteClient(id);}catch(e){showError(e.message);}
     setClients(prev=>prev.filter(c=>c.id!==id));
-    if(client?.id===id){setClient(null);setView("home");}
+    if(client&&client.id===id){setClient(null);setView("home");}
   }
-  async function handleAddPeriod(data) {
-    try{const rows=await DB.createPeriod({...data,client_id:client.id});const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>[...prev,p].sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("Período salvo!");setView("client");}}
+  async function handleAddPeriod(data){
+    try{const rows=await DB.createPeriod(Object.assign({},data,{client_id:client.id}));const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>[...prev,p].sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("Período salvo!");setView("client");}}
     catch(e){showError("Erro ao salvar: "+e.message);}
   }
-  async function handleDeletePeriod(id) {
+  async function handleDeletePeriod(id){
     try{await DB.deletePeriod(id);}catch(e){showError(e.message);}
     setPeriods(prev=>prev.filter(p=>p.id!==id));showToast("Período removido.");
   }
-  async function handleSaveGoals(data) {
+  async function handleSaveGoals(data){
     try{const rows=await DB.upsertGoals(client.id,data);const g=Array.isArray(rows)?rows[0]:rows;setGoals(g);showToast("Metas salvas!");setView("client");setTab("metas");}
     catch(e){showError("Erro ao salvar metas: "+e.message);}
   }
-  async function generateReport() {
+
+  async function generateReport(){
     if(periods.length<1) return;
     setReportLoading(true);setReport("");setView("report");
     const last=periods[periods.length-1];
     const prev=periods.length>1?periods[periods.length-2]:null;
-    const metricLine=(p)=>METRICS.filter(f=>p[f.key]).map(f=>`${f.label}: ${p[f.key]}`).join(" | ");
-    const goalLines=goals?METRICS.filter(f=>goals[f.key]).map(f=>`${f.label}: meta ${goals[f.key]}, realizado ${last[f.key]||"–"}`).join("\n"):"";
-    const system=`Você é estrategista de Instagram para PMEs. Gere relatório em português com seções exatas:\n[RESUMO] 2-3 frases\n[FUNCIONOU] 3 bullets\n[MELHORIA] 3 bullets\n[RECOMENDACOES] 3-5 ações concretas\n[CONTEUDO] Tipos e temas recomendados\n[METAS] Análise metas vs realizado\nSeja direto. Máximo 400 palavras.`;
-    const msg=`Cliente: @${client.name}${client.niche?` | Nicho: ${client.niche}`:""}\nPeríodo: ${last.periodo}\n${metricLine(last)}\n${last.observacoes?`Contexto: ${last.observacoes}`:""}\n${prev?`\nAnterior (${prev.periodo}): ${metricLine(prev)}`:"\nPrimeiro período."}\n${goalLines?`\nMetas:\n${goalLines}`:"\nSem metas."}`;
+    const metricLine=(p)=>METRICS.filter(f=>p[f.key]!=null&&p[f.key]!=="").map(f=>f.label+": "+p[f.key]).join(" | ");
+    const goalLines=goals?METRICS.filter(f=>goals[f.key]).map(f=>f.label+": meta "+goals[f.key]+", realizado "+(last[f.key]||"–")).join("\n"):"";
+    const system="Você é estrategista de Instagram para PMEs. Gere relatório em português com seções exatas:\n[RESUMO] 2-3 frases sobre o período\n[FUNCIONOU] 3 bullets do que performou bem\n[MELHORIA] 3 bullets de oportunidades\n[RECOMENDACOES] 3-5 ações concretas e priorizadas\n[CONTEUDO] Tipos, formatos e temas recomendados para o próximo período\n[METAS] Análise das metas vs realizado\nSeja direto e prático. Máximo 500 palavras.";
+    const msg="Cliente: @"+client.name+(client.niche?" | Nicho: "+client.niche:"")+"\nPeríodo: "+last.periodo+"\n"+metricLine(last)+(last.observacoes?"\nContexto: "+last.observacoes:"")+(prev?"\n\nAnterior ("+prev.periodo+"): "+metricLine(prev):"\n\nPrimeiro período.")+(goalLines?"\n\nMetas:\n"+goalLines:"\n\nSem metas definidas.");
     try{const text=await callClaude([{role:"user",content:msg}],system);setReport(text);}
     catch{setReport("Erro ao gerar relatório.");}
     setReportLoading(false);
   }
-  async function exportCanva() {
+
+  async function exportCanva(){
     if(!report) return;
     setCanvaLoading(true);setCanvaMsg("Preparando conteúdo...");
     const last=periods[periods.length-1];
     const prev=periods.length>1?periods[periods.length-2]:null;
-    const extract=(tag)=>{const m=report.match(new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`));return m?m[1].trim():"";};
-    const top4=METRICS.filter(f=>last[f.key]).slice(0,4).map(f=>{const d=pct(last[f.key],prev?.[f.key]);return `${f.label}: ${fmtNum(last[f.key])}${d?` (${Number(d)>=0?"+":""}${d}%)`:""}`;}).join("\n");
-    const txt=`=== RELATÓRIO @${client.name} — ${last.periodo} ===\n\n📊 NÚMEROS:\n${top4}\n\n📝 RESUMO:\n${extract("RESUMO")}\n\n✅ O QUE FUNCIONOU:\n${extract("FUNCIONOU")}\n\n🎯 RECOMENDAÇÕES:\n${extract("RECOMENDACOES")}\n\n🎬 CONTEÚDO:\n${extract("CONTEUDO")}`;
+    const extract=(tag)=>{const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";};
+    const top4=METRICS.filter(f=>last[f.key]).slice(0,4).map(f=>{const d=pct(last[f.key],prev&&prev[f.key]);return f.label+": "+fmtNum(last[f.key])+(d?" ("+(Number(d)>=0?"+":"")+d+"%)":"");}).join("\n");
+    const txt="=== RELATÓRIO @"+client.name+" — "+last.periodo+" ===\n\n📊 NÚMEROS:\n"+top4+"\n\n📝 RESUMO:\n"+extract("RESUMO")+"\n\n✅ O QUE FUNCIONOU:\n"+extract("FUNCIONOU")+"\n\n🎯 RECOMENDAÇÕES:\n"+extract("RECOMENDACOES")+"\n\n🎬 CONTEÚDO:\n"+extract("CONTEUDO");
     try{await navigator.clipboard.writeText(txt);}catch{}
-    setTimeout(()=>{window.open(`https://www.canva.com/design/${CANVA_DESIGN_ID}/edit`,"_blank");setCanvaMsg("✓ Canva aberto! Conteúdo copiado.");setCanvaLoading(false);},800);
+    setTimeout(()=>{window.open("https://www.canva.com/design/"+CANVA_DESIGN_ID+"/edit","_blank");setCanvaMsg("✓ Canva aberto! Conteúdo copiado.");setCanvaLoading(false);},800);
   }
 
   return (
     <div style={{background:T.bg,minHeight:"100vh",color:T.text}}>
       {toast&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.green,color:"#000",padding:"10px 20px",borderRadius:12,fontWeight:600,fontSize:13,zIndex:999}}>{toast}</div>}
       {error&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.red,color:"#fff",padding:"10px 20px",borderRadius:12,fontWeight:600,fontSize:13,zIndex:999,maxWidth:"80vw",textAlign:"center"}}>{error}</div>}
-      <div style={{borderBottom:`1px solid ${T.border}`,padding:"0 20px",position:"sticky",top:0,background:T.bg,zIndex:100}}>
-        <div style={{maxWidth:900,margin:"0 auto",display:"flex",alignItems:"center",gap:12,height:52}}>
+      <div style={{borderBottom:"1px solid "+T.border,padding:"0 20px",position:"sticky",top:0,background:T.bg,zIndex:100}}>
+        <div style={{maxWidth:960,margin:"0 auto",display:"flex",alignItems:"center",gap:12,height:52}}>
           <button onClick={()=>setView("home")} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center",gap:4}}>
             <span style={{fontSize:18,fontWeight:800,color:T.accent,letterSpacing:-1}}>ig</span>
             <span style={{fontSize:13,color:T.mutedLight,fontWeight:500}}>estratégia</span>
           </button>
-          {client&&view!=="home"&&<><span style={{color:T.border}}>›</span><button onClick={()=>setView("client")} style={{background:"none",border:"none",cursor:"pointer",color:T.mutedLight,fontSize:13}}>@{client.name}</button></>}
+          {client&&view!=="home"&&<><span style={{color:T.border}}>›</span><button onClick={()=>setView("client")} style={{background:"none",border:"none",cursor:"pointer",color:T.mutedLight,fontSize:13}}>{"@"+client.name}</button></>}
           {view==="report"&&<><span style={{color:T.border}}>›</span><span style={{color:T.muted,fontSize:12}}>Relatório</span></>}
           <div style={{flex:1}}/>
           {view==="client"&&!loading&&<div style={{display:"flex",gap:8}}>
@@ -218,7 +263,7 @@ function App() {
           {view==="report"&&report&&!reportLoading&&<Btn small onClick={exportCanva} disabled={canvaLoading}>🎨 Exportar Canva</Btn>}
         </div>
       </div>
-      <div style={{maxWidth:900,margin:"0 auto",padding:"28px 20px"}}>
+      <div style={{maxWidth:960,margin:"0 auto",padding:"28px 20px"}}>
         {loading&&view!=="report"?<div style={{display:"flex",justifyContent:"center",paddingTop:80}}><Spinner/></div>:<>
           {view==="home"&&<HomeView clients={clients} onSelect={selectClient} onNew={()=>setView("newClient")} onDelete={handleDeleteClient}/>}
           {view==="newClient"&&<NewClientView onCreate={handleCreateClient} onBack={()=>setView("home")}/>}
@@ -232,7 +277,7 @@ function App() {
   );
 }
 
-function HomeView({clients,onSelect,onNew,onDelete}) {
+function HomeView({clients,onSelect,onNew,onDelete}){
   return <div>
     <div style={{marginBottom:28}}>
       <div style={{fontSize:10,letterSpacing:3,color:T.accent,textTransform:"uppercase",marginBottom:8}}>Gestão de Contas</div>
@@ -241,19 +286,19 @@ function HomeView({clients,onSelect,onNew,onDelete}) {
     </div>
     {clients.length===0?<Empty icon="📱" text="Nenhum cliente ainda."><Btn onClick={onNew}>+ Adicionar cliente</Btn></Empty>:
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))",gap:14}}>
-      {clients.map(c=><div key={c.id} onClick={()=>onSelect(c)} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:18,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accentMid} onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
+      {clients.map(c=><div key={c.id} onClick={()=>onSelect(c)} style={{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:18,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accentMid} onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
         <div style={{display:"flex",justifyContent:"space-between"}}>
-          <div><div style={{fontWeight:700,fontSize:15}}>@{c.name}</div>{c.niche&&<div style={{color:T.muted,fontSize:12,marginTop:2}}>{c.niche}</div>}</div>
-          <button onClick={e=>{e.stopPropagation();if(window.confirm(`Remover @${c.name}?`))onDelete(c.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:18,padding:0}}>×</button>
+          <div><div style={{fontWeight:700,fontSize:15}}>{"@"+c.name}</div>{c.niche&&<div style={{color:T.muted,fontSize:12,marginTop:2}}>{c.niche}</div>}</div>
+          <button onClick={e=>{e.stopPropagation();if(window.confirm("Remover @"+c.name+"?"))onDelete(c.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:18,padding:0}}>×</button>
         </div>
         <div style={{marginTop:14,color:T.accent,fontSize:12,fontWeight:600}}>Ver análise →</div>
       </div>)}
-      <div onClick={onNew} style={{border:`1.5px dashed ${T.border}`,borderRadius:14,padding:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:T.muted,fontSize:14}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accent} onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>+ Novo cliente</div>
+      <div onClick={onNew} style={{border:"1.5px dashed "+T.border,borderRadius:14,padding:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:T.muted,fontSize:14}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accent} onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>+ Novo cliente</div>
     </div>}
   </div>;
 }
 
-function NewClientView({onCreate,onBack}) {
+function NewClientView({onCreate,onBack}){
   const [name,setName]=useState("");
   const [niche,setNiche]=useState("");
   const [saving,setSaving]=useState(false);
@@ -270,95 +315,123 @@ function NewClientView({onCreate,onBack}) {
   </div>;
 }
 
-function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onAddData,onGoals}) {
+function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onAddData,onGoals}){
   const last=periods[periods.length-1];
   const prev=periods.length>1?periods[periods.length-2]:null;
+
   return <div>
     <div style={{marginBottom:22}}>
       <div style={{fontSize:10,color:T.accent,letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>Cliente</div>
-      <h2 style={{margin:0,fontWeight:800,fontSize:22}}>@{client.name}</h2>
+      <h2 style={{margin:0,fontWeight:800,fontSize:22}}>{"@"+client.name}</h2>
       {client.niche&&<div style={{color:T.muted,fontSize:13}}>{client.niche}</div>}
     </div>
     {periods.length===0?<Empty icon="📊" text="Nenhum período registrado ainda."><Btn onClick={onAddData}>+ Adicionar primeiro período</Btn></Empty>:<>
-      <div style={{display:"flex",borderBottom:`1px solid ${T.border}`,marginBottom:22}}>
-        {[["overview","Visão Geral"],["historico","Histórico"],["metas","Metas"]].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:"none",border:"none",cursor:"pointer",padding:"10px 16px",fontSize:13,fontWeight:600,color:tab===k?T.accent:T.muted,borderBottom:`2px solid ${tab===k?T.accent:"transparent"}`,marginBottom:-1}}>{l}</button>)}
+      <div style={{display:"flex",borderBottom:"1px solid "+T.border,marginBottom:22}}>
+        {[["overview","Visão Geral"],["historico","Histórico"],["metas","Metas"]].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:"none",border:"none",cursor:"pointer",padding:"10px 16px",fontSize:13,fontWeight:600,color:tab===k?T.accent:T.muted,borderBottom:"2px solid "+(tab===k?T.accent:"transparent"),marginBottom:-1}}>{l}</button>)}
       </div>
+
       {tab==="overview"&&<>
-        <div style={{fontSize:12,color:T.muted,marginBottom:14}}>Último período: <strong style={{color:T.mutedLight}}>{last?.periodo}</strong>{prev&&<> · vs <strong style={{color:T.mutedLight}}>{prev?.periodo}</strong></>}</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(190px, 1fr))",gap:12}}>
-          {METRICS.filter(f=>last?.[f.key]).map(f=><div key={f.key} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,padding:14}}>
-            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>{f.icon} {f.label}</div>
-            <div style={{fontWeight:800,fontSize:22,marginBottom:4}}>{fmtNum(last[f.key])}</div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><Delta curr={last[f.key]} prev={prev?.[f.key]}/><SparkBar periods={periods} metricKey={f.key}/></div>
-            <GoalBar actual={last[f.key]} goal={goals?.[f.key]}/>
-          </div>)}
-        </div>
+        <div style={{fontSize:12,color:T.muted,marginBottom:16}}>Último período: <strong style={{color:T.mutedLight}}>{last&&last.periodo}</strong>{prev&&<> · vs <strong style={{color:T.mutedLight}}>{prev.periodo}</strong></>}</div>
+        {METRIC_GROUPS.map(g=>{
+          const hasData=g.fields.some(f=>last&&last[f.key]!=null&&last[f.key]!=="");
+          if(!hasData) return null;
+          return <div key={g.group}>
+            <SectionTitle icon={g.icon} label={g.label}/>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(175px, 1fr))",gap:10,marginBottom:8}}>
+              {g.fields.filter(f=>last&&last[f.key]!=null&&last[f.key]!=="").map(f=><div key={f.key} style={{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}}>
+                <div style={{fontSize:11,color:T.muted,marginBottom:4}}>{f.icon+" "+f.label}</div>
+                <div style={{fontWeight:800,fontSize:20,marginBottom:4}}>{fmtNum(last[f.key])}</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <Delta curr={last[f.key]} prev={prev&&prev[f.key]}/>
+                  <SparkBar periods={periods} metricKey={f.key}/>
+                </div>
+                <GoalBar actual={last[f.key]} goal={goals&&goals[f.key]}/>
+              </div>)}
+            </div>
+          </div>;
+        })}
       </>}
-      {tab==="historico"&&<div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,overflow:"hidden"}}>
+
+      {tab==="historico"&&<div style={{background:T.card,border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}}>
         <div style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-            <thead><tr style={{borderBottom:`1px solid ${T.border}`}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead><tr style={{borderBottom:"1px solid "+T.border}}>
               <th style={{padding:"10px 16px",textAlign:"left",color:T.muted,fontWeight:600,whiteSpace:"nowrap"}}>Período</th>
-              {METRICS.filter(f=>periods.some(p=>p[f.key])).map(f=><th key={f.key} style={{padding:"10px",textAlign:"right",color:T.muted,fontWeight:600,whiteSpace:"nowrap",fontSize:12}}>{f.label}</th>)}
+              {METRICS.filter(f=>periods.some(p=>p[f.key]!=null&&p[f.key]!=="")).map(f=><th key={f.key} style={{padding:"8px 10px",textAlign:"right",color:T.muted,fontWeight:600,whiteSpace:"nowrap"}}>{f.label}</th>)}
               <th/>
             </tr></thead>
             <tbody>{[...periods].reverse().map((p,ri)=>{
               const i=periods.length-1-ri;const pv=i>0?periods[i-1]:null;
-              return <tr key={p.id} style={{borderBottom:`1px solid ${T.border}22`}}>
+              return <tr key={p.id} style={{borderBottom:"1px solid "+T.border+"22"}}>
                 <td style={{padding:"10px 16px",fontWeight:600,whiteSpace:"nowrap"}}>{p.periodo}</td>
-                {METRICS.filter(f=>periods.some(pp=>pp[f.key])).map(f=><td key={f.key} style={{padding:"10px",textAlign:"right",whiteSpace:"nowrap"}}>
+                {METRICS.filter(f=>periods.some(pp=>pp[f.key]!=null&&pp[f.key]!=="")).map(f=><td key={f.key} style={{padding:"8px 10px",textAlign:"right",whiteSpace:"nowrap"}}>
                   <span style={{color:T.mutedLight}}>{fmtNum(p[f.key])}</span>
                   {pv&&p[f.key]&&<span style={{marginLeft:4}}><Delta curr={p[f.key]} prev={pv[f.key]}/></span>}
                 </td>)}
-                <td style={{padding:"10px 12px"}}><button onClick={()=>{if(window.confirm("Remover período?"))onDeletePeriod(p.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}}>×</button></td>
+                <td style={{padding:"8px 12px"}}><button onClick={()=>{if(window.confirm("Remover período?"))onDeletePeriod(p.id);}} style={{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}}>×</button></td>
               </tr>;
             })}</tbody>
           </table>
         </div>
       </div>}
+
       {tab==="metas"&&(!goals||Object.keys(goals).filter(k=>!["id","client_id","updated_at"].includes(k)&&goals[k]).length===0?
         <Empty icon="🎯" text="Nenhuma meta definida ainda."><Btn onClick={onGoals}>Definir metas</Btn></Empty>:
         <><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{fontSize:13,color:T.muted}}>Metas vs. {last?.periodo}</div>
+          <div style={{fontSize:13,color:T.muted}}>Metas vs. {last&&last.periodo}</div>
           <Btn small outline onClick={onGoals}>Editar metas</Btn>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))",gap:12}}>
-          {METRICS.filter(f=>goals[f.key]).map(f=>{
-            const actual=last?.[f.key];const status=goalStatus(actual,goals[f.key]);
-            const color=status==="achieved"?T.green:status==="near"?T.yellow:T.accent;
-            const ratio=actual&&goals[f.key]?Math.min(Number(actual)/Number(goals[f.key]),1):0;
-            return <div key={f.key} style={{background:T.card,border:`1px solid ${status==="achieved"?T.green+"55":T.border}`,borderRadius:12,padding:14}}>
-              <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{f.icon} {f.label}</div>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-                <div><div style={{fontSize:20,fontWeight:800}}>{fmtNum(actual)}</div><div style={{fontSize:10,color:T.muted}}>realizado</div></div>
-                <div style={{textAlign:"right"}}><div style={{fontSize:16,fontWeight:700,color:T.muted}}>{fmtNum(goals[f.key])}</div><div style={{fontSize:10,color:T.muted}}>meta</div></div>
-              </div>
-              <div style={{height:4,borderRadius:4,background:T.border,marginBottom:6}}><div style={{height:"100%",width:`${ratio*100}%`,background:color,borderRadius:4}}/></div>
-              <div style={{fontSize:11,color,fontWeight:600}}>{status==="achieved"?"✓ Meta atingida!":status==="near"?"⚡ Quase lá":`${Math.round(ratio*100)}% da meta`}</div>
-            </div>;
-          })}
-        </div></>
+        {METRIC_GROUPS.map(g=>{
+          const hasGoal=g.fields.some(f=>goals&&goals[f.key]);
+          if(!hasGoal) return null;
+          return <div key={g.group}>
+            <SectionTitle icon={g.icon} label={g.label}/>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(190px, 1fr))",gap:10,marginBottom:8}}>
+              {g.fields.filter(f=>goals&&goals[f.key]).map(f=>{
+                const actual=last&&last[f.key];const status=goalStatus(actual,goals[f.key]);
+                const color=status==="achieved"?T.green:status==="near"?T.yellow:T.accent;
+                const ratio=actual&&goals[f.key]?Math.min(Number(actual)/Number(goals[f.key]),1):0;
+                return <div key={f.key} style={{background:T.card,border:"1px solid "+(status==="achieved"?T.green+"55":T.border),borderRadius:12,padding:14}}>
+                  <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{f.icon+" "+f.label}</div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                    <div><div style={{fontSize:18,fontWeight:800}}>{fmtNum(actual)}</div><div style={{fontSize:10,color:T.muted}}>realizado</div></div>
+                    <div style={{textAlign:"right"}}><div style={{fontSize:15,fontWeight:700,color:T.muted}}>{fmtNum(goals[f.key])}</div><div style={{fontSize:10,color:T.muted}}>meta</div></div>
+                  </div>
+                  <div style={{height:4,borderRadius:4,background:T.border,marginBottom:6}}><div style={{height:"100%",width:(ratio*100)+"%",background:color,borderRadius:4}}/></div>
+                  <div style={{fontSize:11,color,fontWeight:600}}>{status==="achieved"?"✓ Meta atingida!":status==="near"?"⚡ Quase lá":Math.round(ratio*100)+"% da meta"}</div>
+                </div>;
+              })}
+            </div>
+          </div>;
+        })}</>
       )}
     </>}
   </div>;
 }
 
-function GoalsView({client,goals,periods,onSave,onBack}) {
+function GoalsView({client,goals,periods,onSave,onBack}){
   const last=periods[periods.length-1];
-  const [local,setLocal]=useState(()=>{const g={};METRICS.forEach(f=>{g[f.key]=goals?.[f.key]??""});return g;});
+  const [local,setLocal]=useState(()=>{const g={};METRICS.forEach(f=>{g[f.key]=goals&&goals[f.key]!=null?goals[f.key]:""});return g;});
   const [saving,setSaving]=useState(false);
-  async function handle(){setSaving(true);const clean={};METRICS.forEach(f=>{if(local[f.key]!==""&&local[f.key]!==null)clean[f.key]=local[f.key];});await onSave(clean);setSaving(false);}
-  return <div style={{maxWidth:620}}>
+  async function handle(){
+    setSaving(true);
+    const clean={};METRICS.forEach(f=>{if(local[f.key]!==""&&local[f.key]!==null)clean[f.key]=local[f.key];});
+    await onSave(clean);setSaving(false);
+  }
+  return <div style={{maxWidth:700}}>
     <BackBtn onClick={onBack}/>
-    <h2 style={{margin:"0 0 6px",fontWeight:800}}>🎯 Metas — @{client.name}</h2>
-    <p style={{color:T.muted,fontSize:14,marginBottom:24}}>Defina as metas para acompanhar a evolução mês a mês.</p>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-      {METRICS.map(f=><div key={f.key} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:12}}>
-        <div style={{fontSize:11,color:T.muted,marginBottom:4}}>{f.icon} {f.label}</div>
-        {last?.[f.key]&&<div style={{fontSize:11,color:T.mutedLight,marginBottom:6}}>Atual: {fmtNum(last[f.key])}</div>}
-        <input type="number" value={local[f.key]||""} onChange={e=>setLocal(g=>({...g,[f.key]:e.target.value}))} placeholder="Definir meta" style={{width:"100%",background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,color:T.text,padding:"8px 10px",fontSize:13,boxSizing:"border-box",outline:"none",fontFamily:"inherit"}}/>
-      </div>)}
-    </div>
+    <h2 style={{margin:"0 0 6px",fontWeight:800}}>🎯 Metas — {"@"+client.name}</h2>
+    <p style={{color:T.muted,fontSize:14,marginBottom:8}}>Defina as metas para acompanhar a evolução mês a mês.</p>
+    {METRIC_GROUPS.map(g=><div key={g.group}>
+      <SectionTitle icon={g.icon} label={g.label}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}}>
+        {g.fields.map(f=><div key={f.key} style={{background:T.card,border:"1px solid "+T.border,borderRadius:10,padding:12}}>
+          <div style={{fontSize:11,color:T.muted,marginBottom:4}}>{f.icon+" "+f.label}</div>
+          {last&&last[f.key]!=null&&last[f.key]!==""&&<div style={{fontSize:11,color:T.mutedLight,marginBottom:6}}>Atual: {fmtNum(last[f.key])}</div>}
+          <input type="number" value={local[f.key]||""} onChange={e=>setLocal(g=>Object.assign({},g,{[f.key]:e.target.value}))} placeholder="Definir meta" style={{width:"100%",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.text,padding:"8px 10px",fontSize:13,boxSizing:"border-box",outline:"none",fontFamily:"inherit"}}/>
+        </div>)}
+      </div>
+    </div>)}
     <div style={{marginTop:20,display:"flex",gap:10}}>
       <Btn onClick={handle} disabled={saving}>{saving?"Salvando...":"Salvar metas"}</Btn>
       <Btn outline onClick={onBack}>Cancelar</Btn>
@@ -366,70 +439,71 @@ function GoalsView({client,goals,periods,onSave,onBack}) {
   </div>;
 }
 
-function AddDataView({client,onAdd,onBack}) {
+function AddDataView({client,onAdd,onBack}){
   const [mode,setMode]=useState("choice");
   const [periodo,setPeriodo]=useState("");
   const [metrics,setMetrics]=useState({});
   const [obs,setObs]=useState("");
-  const [uploading,setUploading]=useState(false);
-  const [uploadMsg,setUploadMsg]=useState("");
-  const [extracted,setExtracted]=useState(false);
   const [saving,setSaving]=useState(false);
-  const fileRef=useRef();
+  const jsonRef=useRef();
 
-  async function handleImages(files) {
-    if(!files?.length) return;
-    setUploading(true);setUploadMsg("Analisando prints com IA...");
-    try{
-      const imgs=await Promise.all(Array.from(files).map(async f=>({type:"image",source:{type:"base64",media_type:f.type||"image/jpeg",data:await imageToBase64(f)}})));
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:"Extraia métricas de prints do Instagram Insights. Responda APENAS com JSON válido sem markdown. Chaves aceitas: seguidores,alcance,impressoes,engajamento,curtidas,comentarios,salvamentos,visitas_perfil,cliques_bio,stories_views,stories_respostas,reels_views,reels_compartilhamentos,periodo. Para periodo use Mês/AAAA. Apenas números.",messages:[{role:"user",content:[...imgs,{type:"text",text:"Extraia as métricas e retorne apenas JSON."}]}]})});
-      const data=await res.json();
-      const clean=(data.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim();
-      const parsed=JSON.parse(clean);
-      const{periodo:p,...rest}=parsed;
-      if(p) setPeriodo(p);
-      setMetrics(prev=>({...prev,...rest}));
-      setExtracted(true);setUploadMsg(`✓ ${Object.keys(rest).length} métricas extraídas! Revise e salve.`);
-    }catch{setUploadMsg("Não foi possível extrair. Preencha manualmente.");}
-    setUploading(false);
+  function setM(key,val){setMetrics(m=>Object.assign({},m,{[key]:val}));}
+
+  function handleJsonImport(e){
+    const file=e.target.files&&e.target.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const parsed=JSON.parse(ev.target.result);
+        const p=parsed.periodo;const o=parsed.observacoes;
+        if(p) setPeriodo(p);
+        if(o) setObs(o);
+        const rest=Object.assign({},parsed);
+        delete rest.periodo;delete rest.observacoes;
+        setMetrics(prev=>Object.assign({},prev,rest));
+        setMode("manual");
+        setTimeout(()=>alert("✓ JSON importado com sucesso! Revise os dados e salve."),100);
+      }catch{alert("Arquivo JSON inválido. Verifique o formato.");}
+    };
+    r.readAsText(file);
   }
 
   async function handleSave(){
-    if(!periodo.trim()){alert("Informe o período (ex: Jun/2025).");return;}
-    setSaving(true);await onAdd({periodo:periodo.trim(),...metrics,observacoes:obs});setSaving(false);
+    if(!periodo.trim()){alert("Informe o período (ex: Abr/2025).");return;}
+    setSaving(true);
+    await onAdd(Object.assign({periodo:periodo.trim(),observacoes:obs},metrics));
+    setSaving(false);
   }
 
-  if(mode==="choice") return <div style={{maxWidth:460}}>
+  if(mode==="choice") return <div style={{maxWidth:480}}>
     <BackBtn onClick={onBack}/>
     <h2 style={{margin:"0 0 6px",fontWeight:800}}>Novo período</h2>
-    <p style={{color:T.muted,fontSize:14,marginBottom:24}}>@{client.name} — como deseja inserir os dados?</p>
+    <p style={{color:T.muted,fontSize:14,marginBottom:24}}>{"@"+client.name+" — como deseja inserir os dados?"}</p>
     <div style={{display:"grid",gap:12}}>
-      {[{icon:"📸",title:"Enviar prints do Instagram",desc:"A IA extrai as métricas automaticamente",m:"upload",rec:true},{icon:"⌨️",title:"Inserir manualmente",desc:"Digite os números campo a campo",m:"manual",rec:false}].map(o=><div key={o.m} onClick={()=>setMode(o.m)} style={{background:T.card,border:`1.5px solid ${o.rec?T.accentMid:T.border}`,borderRadius:14,padding:18,cursor:"pointer",position:"relative"}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accent} onMouseLeave={e=>e.currentTarget.style.borderColor=o.rec?T.accentMid:T.border}>
+      {[
+        {icon:"📋",title:"Importar JSON do Claude",desc:"Envie prints ao Claude nesta conversa, receba o JSON e importe aqui com 1 clique",m:"json",rec:true},
+        {icon:"⌨️",title:"Inserir manualmente",desc:"Digite os números campo a campo organizados por tipo de conteúdo",m:"manual",rec:false}
+      ].map(o=><div key={o.m} onClick={()=>o.m==="json"?jsonRef.current.click():setMode(o.m)} style={{background:T.card,border:"1.5px solid "+(o.rec?T.accentMid:T.border),borderRadius:14,padding:18,cursor:"pointer",position:"relative"}} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accent} onMouseLeave={e=>e.currentTarget.style.borderColor=o.rec?T.accentMid:T.border}>
         {o.rec&&<div style={{position:"absolute",top:12,right:12,fontSize:11,color:T.accent,background:T.accentSoft,padding:"2px 8px",borderRadius:20,fontWeight:700}}>Recomendado</div>}
         <div style={{fontSize:22,marginBottom:6}}>{o.icon}</div>
         <div style={{fontWeight:700,fontSize:14,marginBottom:3}}>{o.title}</div>
         <div style={{color:T.muted,fontSize:13}}>{o.desc}</div>
       </div>)}
     </div>
+    <input ref={jsonRef} type="file" accept=".json" style={{display:"none"}} onChange={handleJsonImport}/>
   </div>;
 
-  return <div style={{maxWidth:580}}>
+  return <div style={{maxWidth:700}}>
     <BackBtn onClick={()=>setMode("choice")}/>
-    <h2 style={{margin:"0 0 20px",fontWeight:800}}>{mode==="upload"?"📸 Analisar prints":"⌨️ Inserir dados"} — @{client.name}</h2>
-    {mode==="upload"&&<div style={{marginBottom:20}}>
-      <div onClick={()=>fileRef.current?.click()} style={{border:`2px dashed ${T.border}`,borderRadius:14,padding:36,textAlign:"center",cursor:"pointer"}} onDrop={e=>{e.preventDefault();handleImages(e.dataTransfer.files);}} onDragOver={e=>e.preventDefault()} onMouseEnter={e=>e.currentTarget.style.borderColor=T.accent} onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
-        <div style={{fontSize:26,marginBottom:8}}>{uploading?"⏳":"📸"}</div>
-        <div style={{color:T.mutedLight,fontSize:14}}>{uploading?"Analisando com IA...":"Clique ou arraste os prints do Instagram Insights"}</div>
-        <div style={{color:T.muted,fontSize:12,marginTop:4}}>Pode enviar várias imagens de uma vez</div>
+    <h2 style={{margin:"0 0 20px",fontWeight:800}}>{"⌨️ Inserir dados — @"+client.name}</h2>
+    <Field label="Período *" value={periodo} onChange={setPeriodo} placeholder="ex: Abr/2025"/>
+    {METRIC_GROUPS.map(g=><div key={g.group}>
+      <SectionTitle icon={g.icon} label={g.label}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}}>
+        {g.fields.map(f=><Field key={f.key} label={f.icon+" "+f.label} value={metrics[f.key]||""} onChange={v=>setM(f.key,v)} placeholder="–" number/>)}
       </div>
-      <input ref={fileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>handleImages(e.target.files)}/>
-      {uploadMsg&&<div style={{marginTop:10,padding:"10px 14px",borderRadius:10,background:extracted?T.greenSoft:T.accentSoft,color:extracted?T.green:T.accent,fontSize:13}}>{uploadMsg}</div>}
-    </div>}
-    <Field label="Período *" value={periodo} onChange={setPeriodo} placeholder="ex: Jun/2025"/>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:4}}>
-      {METRICS.map(f=><Field key={f.key} label={`${f.icon} ${f.label}`} value={metrics[f.key]||""} onChange={v=>setMetrics(m=>({...m,[f.key]:v}))} placeholder="–" number/>)}
-    </div>
-    <div style={{marginTop:10}}><Field label="Observações do período" value={obs} onChange={setObs} placeholder="Campanha, feriado, lançamento..." multiline/></div>
+    </div>)}
+    <div style={{marginTop:10}}><Field label="Observações do período" value={obs} onChange={setObs} placeholder="Campanha, feriado, lançamento de produto..." multiline/></div>
     <div style={{marginTop:18,display:"flex",gap:10}}>
       <Btn onClick={handleSave} disabled={!periodo.trim()||saving}>{saving?"Salvando...":"Salvar período"}</Btn>
       <Btn outline onClick={()=>setMode("choice")}>Voltar</Btn>
@@ -437,31 +511,38 @@ function AddDataView({client,onAdd,onBack}) {
   </div>;
 }
 
-function ReportView({report,loading,client,periods,goals,onBack,onExport,canvaLoading,canvaMsg}) {
-  const last=periods?.[periods.length-1];
-  function extract(tag){if(!report)return "";const m=report.match(new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`));return m?m[1].trim():"";}
+function ReportView({report,loading,client,periods,goals,onBack,onExport,canvaLoading,canvaMsg}){
+  const last=periods&&periods[periods.length-1];
+  function extract(tag){if(!report)return "";const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";}
   function renderText(text){
     return text.split("\n").map((line,i)=>{
       if(!line.trim()) return <div key={i} style={{height:4}}/>;
       const isBullet=line.match(/^[-•*]|^\d+\./);
       const content=isBullet?line.replace(/^[-•*]\s*/,"").replace(/^\d+\.\s*/,""):line;
-      const html=content.replace(/\*\*(.*?)\*\*/g,`<strong style="color:${T.mutedLight}">$1</strong>`);
+      const html=content.replace(/\*\*(.*?)\*\*/g,'<strong style="color:'+T.mutedLight+'">$1</strong>');
       if(isBullet) return <div key={i} style={{display:"flex",gap:10,marginBottom:7,fontSize:14,lineHeight:1.6}}><span style={{color:T.accent,flexShrink:0}}>·</span><span dangerouslySetInnerHTML={{__html:html}}/></div>;
       return <p key={i} style={{fontSize:14,lineHeight:1.7,margin:"0 0 7px"}} dangerouslySetInnerHTML={{__html:html}}/>;
     });
   }
-  const sections=[{tag:"RESUMO",title:"Resumo Executivo",icon:"📋"},{tag:"FUNCIONOU",title:"O que funcionou",icon:"✅"},{tag:"MELHORIA",title:"Pontos de melhoria",icon:"🔧"},{tag:"RECOMENDACOES",title:"Recomendações",icon:"🎯"},{tag:"CONTEUDO",title:"Direcionamento de Conteúdo",icon:"🎬"},{tag:"METAS",title:"Análise de Metas",icon:"🏁"}];
+  const sections=[
+    {tag:"RESUMO",title:"Resumo Executivo",icon:"📋"},
+    {tag:"FUNCIONOU",title:"O que funcionou",icon:"✅"},
+    {tag:"MELHORIA",title:"Pontos de melhoria",icon:"🔧"},
+    {tag:"RECOMENDACOES",title:"Recomendações",icon:"🎯"},
+    {tag:"CONTEUDO",title:"Direcionamento de Conteúdo",icon:"🎬"},
+    {tag:"METAS",title:"Análise de Metas",icon:"🏁"},
+  ];
   return <div style={{maxWidth:700}}>
     <BackBtn onClick={onBack} label="← Voltar ao cliente"/>
     <div style={{marginBottom:24}}>
       <h2 style={{margin:0,fontWeight:800,fontSize:22}}>Relatório Estratégico</h2>
-      <div style={{color:T.muted,fontSize:13,marginTop:2}}>@{client?.name} · {last?.periodo}</div>
+      <div style={{color:T.muted,fontSize:13,marginTop:2}}>{"@"+(client&&client.name)+" · "+(last&&last.periodo)}</div>
     </div>
-    {canvaMsg&&<div style={{marginBottom:16,padding:"12px 16px",borderRadius:12,background:T.greenSoft,color:T.green,fontSize:13,border:`1px solid ${T.green}33`}}>{canvaMsg}</div>}
-    {loading?<div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:16,padding:60,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}><Spinner/><div style={{color:T.muted,fontSize:13}}>A IA está analisando os dados...</div></div>:
+    {canvaMsg&&<div style={{marginBottom:16,padding:"12px 16px",borderRadius:12,background:T.greenSoft,color:T.green,fontSize:13,border:"1px solid "+T.green+"33"}}>{canvaMsg}</div>}
+    {loading?<div style={{background:T.card,border:"1px solid "+T.border,borderRadius:16,padding:60,display:"flex",flexDirection:"column",alignItems:"center",gap:14}}><Spinner/><div style={{color:T.muted,fontSize:13}}>A IA está analisando os dados...</div></div>:
     <div style={{display:"grid",gap:14}}>
-      {sections.map(s=>{const content=extract(s.tag);if(!content)return null;return <div key={s.tag} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:22}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span>{s.icon}</span><span style={{fontWeight:700,fontSize:14,color:T.mutedLight}}>{s.title}</span></div>{renderText(content)}</div>;})}
-      <div style={{background:T.accentSoft,border:`1px solid ${T.accentMid}44`,borderRadius:14,padding:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
+      {sections.map(s=>{const content=extract(s.tag);if(!content)return null;return <div key={s.tag} style={{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:22}}><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span>{s.icon}</span><span style={{fontWeight:700,fontSize:14,color:T.mutedLight}}>{s.title}</span></div>{renderText(content)}</div>;})}
+      <div style={{background:T.accentSoft,border:"1px solid "+T.accentMid+"44",borderRadius:14,padding:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
         <div><div style={{fontWeight:700,fontSize:14,color:T.accent}}>🎨 Exportar para Canva</div><div style={{color:T.muted,fontSize:13,marginTop:2}}>Abre o template com conteúdo pronto para editar</div></div>
         <Btn onClick={onExport} disabled={canvaLoading}>{canvaLoading?"Abrindo...":"Exportar →"}</Btn>
       </div>
