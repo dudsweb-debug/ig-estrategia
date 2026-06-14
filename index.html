@@ -85,11 +85,13 @@ async function sbFetch(path,method,body,extra){
 
 const DB = {
   getClients: ()=>sbFetch("clients?select=*&order=created_at.asc"),
-  createClient: (name,niche)=>sbFetch("clients","POST",{name,niche}),
+  createClient: (name,niche,url)=>sbFetch("clients","POST",{name,niche,instagram_url:url||null}),
+  updateClient: (id,data)=>sbFetch("clients?id=eq."+id,"PATCH",data),
   deleteClient: (id)=>sbFetch("clients?id=eq."+id,"DELETE",null,{"Prefer":"return=minimal"}),
   getPeriods: (cid)=>sbFetch("periods?client_id=eq."+cid+"&select=*&order=periodo.asc"),
   createPeriod: (data)=>sbFetch("periods","POST",data),
   deletePeriod: (id)=>sbFetch("periods?id=eq."+id,"DELETE",null,{"Prefer":"return=minimal"}),
+  updatePeriod: (id,data)=>sbFetch("periods?id=eq."+id,"PATCH",data),
   getGoals: async(cid)=>{const r=await sbFetch("goals?client_id=eq."+cid+"&select=*");return r&&r[0]||null;},
   upsertGoals: (cid,data)=>sbFetch("goals","POST",Object.assign({client_id:cid,updated_at:new Date().toISOString()},data),{"Prefer":"return=representation,resolution=merge-duplicates"}),
 };
@@ -187,8 +189,12 @@ function App(){
     catch(e){showErr(e.message);}
     setLoading(false);setView("client");setTab("overview");
   }
-  async function createClient(name,niche){
-    try{const rows=await DB.createClient(name,niche);const c=Array.isArray(rows)?rows[0]:rows;if(c){setClients(p=>[...p,c]);await selClient(c);}else showErr("Erro inesperado.");}
+  async function updateClient(id,data){
+    try{const rows=await DB.updateClient(id,data);const c=Array.isArray(rows)?rows[0]:rows;if(c){setClients(p=>p.map(x=>x.id===id?c:x));setClient(c);showToast("✓ Cliente atualizado!");setView("client");}}
+    catch(e){showErr("Erro: "+e.message);}
+  }
+  async function createClient(name,niche,url){
+    try{const rows=await DB.createClient(name,niche,url);const c=Array.isArray(rows)?rows[0]:rows;if(c){setClients(p=>[...p,c]);await selClient(c);}else showErr("Erro inesperado.");}
     catch(e){showErr("Erro: "+e.message);}
   }
   async function delClient(id){
@@ -203,6 +209,10 @@ function App(){
   async function delPeriod(id){
     try{await DB.deletePeriod(id);}catch(e){showErr(e.message);}
     setPeriods(p=>p.filter(x=>x.id!==id));showToast("Período removido.");
+  }
+  async function editPeriodDate(id,newPeriodo){
+    try{const rows=await DB.updatePeriod(id,{periodo:newPeriodo});const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===id?p:x).sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período atualizado!");}}
+    catch(e){showErr("Erro: "+e.message);}
   }
   async function saveGoals(data){
     try{const rows=await DB.upsertGoals(client.id,data);const g=Array.isArray(rows)?rows[0]:rows;setGoals(g);showToast("✓ Metas salvas!");setView("client");setTab("metas");}
@@ -251,6 +261,7 @@ function App(){
       view==="report"&&h(Fragment,null,h("span",{style:{color:T.border}},"›"),h("span",{style:{color:T.muted,fontSize:12}},"Relatório")),
       h("div",{style:{flex:1}}),
       view==="client"&&!loading&&h("div",{style:{display:"flex",gap:8}},
+        h(Btn,{small:true,outline:true,onClick:()=>setView("editClient")},"✏️ Editar"),
         h(Btn,{small:true,outline:true,onClick:()=>setView("goals")},"🎯 Metas"),
         h(Btn,{small:true,outline:true,onClick:()=>setView("addData")},"+ Período"),
         h(Btn,{small:true,onClick:genReport,disabled:!periods.length},"✦ Relatório")
@@ -269,7 +280,8 @@ function App(){
         : h(Fragment,null,
           view==="home"&&h(HomeView,{clients,onSelect:selClient,onNew:()=>setView("newClient"),onDelete:delClient}),
           view==="newClient"&&h(NewClientView,{onCreate:createClient,onBack:()=>setView("home")}),
-          view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
+          view==="editClient"&&client&&h(EditClientView,{client,onSave:updateClient,onBack:()=>setView("client")}),
+          view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onEditPeriod:editPeriodDate,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
           view==="goals"&&client&&h(GoalsView,{client,goals,periods,onSave:saveGoals,onBack:()=>setView("client")}),
           view==="addData"&&client&&h(AddDataView,{client,onAdd:addPeriod,onBack:()=>setView("client")}),
           view==="report"&&h(ReportView,{report,loading:repLoading,client,periods,onBack:()=>setView("client"),onExport:exportCanva,canvaLoad,canvaMsg})
@@ -311,13 +323,15 @@ function HomeView({clients,onSelect,onNew,onDelete}){
 function NewClientView({onCreate,onBack}){
   const [name,setName]=useState("");
   const [niche,setNiche]=useState("");
+  const [url,setUrl]=useState("");
   const [saving,setSaving]=useState(false);
-  async function go(){if(!name.trim())return;setSaving(true);await onCreate(name.trim(),niche.trim());setSaving(false);}
+  async function go(){if(!name.trim())return;setSaving(true);await onCreate(name.trim(),niche.trim(),url.trim());setSaving(false);}
   return h("div",{style:{maxWidth:460}},
     h(Back,{onClick:onBack}),
     h("h2",{style:{margin:"0 0 22px",fontWeight:800}},"Novo cliente"),
     h(Fld,{label:"Nome do perfil (sem @)",value:name,onChange:setName,placeholder:"ex: loja_doce_mania"}),
     h(Fld,{label:"Nicho / Segmento",value:niche,onChange:setNiche,placeholder:"ex: Confeitaria artesanal"}),
+    h(Fld,{label:"Link do Instagram",value:url,onChange:setUrl,placeholder:"ex: https://instagram.com/loja_doce_mania"}),
     h("div",{style:{marginTop:20,display:"flex",gap:10}},
       h(Btn,{onClick:go,disabled:!name.trim()||saving},saving?"Criando...":"Criar cliente"),
       h(Btn,{outline:true,onClick:onBack},"Cancelar")
@@ -325,7 +339,26 @@ function NewClientView({onCreate,onBack}){
   );
 }
 
-function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onAddData,onGoals}){
+function EditClientView({client,onSave,onBack}){
+  const [name,setName]=useState(client.name||"");
+  const [niche,setNiche]=useState(client.niche||"");
+  const [url,setUrl]=useState(client.instagram_url||"");
+  const [saving,setSaving]=useState(false);
+  async function go(){if(!name.trim())return;setSaving(true);await onSave(client.id,{name:name.trim(),niche:niche.trim(),instagram_url:url.trim()||null});setSaving(false);}
+  return h("div",{style:{maxWidth:460}},
+    h(Back,{onClick:onBack}),
+    h("h2",{style:{margin:"0 0 22px",fontWeight:800}},"Editar cliente"),
+    h(Fld,{label:"Nome do perfil (sem @)",value:name,onChange:setName,placeholder:"ex: loja_doce_mania"}),
+    h(Fld,{label:"Nicho / Segmento",value:niche,onChange:setNiche,placeholder:"ex: Confeitaria artesanal"}),
+    h(Fld,{label:"Link do Instagram",value:url,onChange:setUrl,placeholder:"ex: https://instagram.com/loja_doce_mania"}),
+    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+      h(Btn,{onClick:go,disabled:!name.trim()||saving},saving?"Salvando...":"Salvar alterações"),
+      h(Btn,{outline:true,onClick:onBack},"Cancelar")
+    )
+  );
+}
+
+function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod,onAddData,onGoals}){
   const last=periods[periods.length-1];
   const prev=periods.length>1?periods[periods.length-2]:null;
   const tabs=[["overview","Visão Geral"],["historico","Histórico"],["metas","Metas"]];
@@ -392,8 +425,9 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onAddData,on
                     pv&&p[f.key]&&h(Delta,{curr:p[f.key],prev:pv[f.key]})
                   )
                 ),
-                h("td",{style:{padding:"8px 12px"}},
-                  h("button",{onClick:()=>{if(window.confirm("Remover?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}},"×")
+                h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap",display:"flex",gap:6,alignItems:"center"}},
+                  h("button",{onClick:()=>{const np=window.prompt("Alterar período:",p.periodo);if(np&&np.trim()&&np.trim()!==p.periodo)onEditPeriod(p.id,np.trim());},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:12,padding:"2px 8px",borderRadius:6,border:"1px solid "+T.border}},"✏️"),
+                  h("button",{onClick:()=>{if(window.confirm("Remover período "+p.periodo+"?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}},"×")
                 )
               );
             })
