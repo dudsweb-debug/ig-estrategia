@@ -111,8 +111,10 @@ const DB = {
 function fmt(n){
   if(n===undefined||n===null||n==="") return "–";
   const num=Number(n); if(isNaN(num)) return "–";
-  if(num>=1e6) return (num/1e6).toFixed(1)+"M";
-  if(num>=1000) return (num/1000).toFixed(1)+"K";
+  const abs=Math.abs(num);
+  const prefix=num<0?"-":"";
+  if(abs>=1e6) return prefix+(abs/1e6).toFixed(1)+"M";
+  if(abs>=1000) return prefix+(abs/1000).toFixed(1)+"K";
   return num.toLocaleString("pt-BR");
 }
 function pct(a,b){
@@ -264,13 +266,15 @@ function App(){
     ].join("\n")
     const msg="Cliente: @"+client.name+(client.niche?" | "+client.niche:"")+"\nPeríodo: "+last.periodo+"\n"+line(last)+(publicoInfo?"\nPúblico: "+publicoInfo:"")+(last.observacoes?"\nContexto: "+last.observacoes:"")+(prev?"\n\nAnterior ("+prev.periodo+"): "+line(prev):"\nPrimeiro período.")+(goalLines?"\n\nMetas:\n"+goalLines:"");
     try{
-      const geminiKey="AIzaSyAQ-Ab8RN6LWIpngeNrFIvohsjs_DhAUq_RiAqzlcXtUUZJz7hhrAA";
-      const geminiBody={contents:[{parts:[{text:sys+"\n\nDADOS:\n"+msg}]}],generationConfig:{maxOutputTokens:1500,temperature:0.7}};
-      const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+geminiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(geminiBody)});
+      const geminiKey="AIzaSyAQ.Ab8RN6LWIpngeNrFIvohsjs_DhAUq_RiAqzlcXtUUZJz7hhrAA";
+      const fullPrompt=sys+"\n\nDADOS DO CLIENTE:\n"+msg;
+      const geminiBody={contents:[{role:"user",parts:[{text:fullPrompt}]}],generationConfig:{maxOutputTokens:2000,temperature:0.8}};
+      const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+geminiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(geminiBody)});
       const data=await res.json();
+      if(data.error){setReport("[RESUMO] Erro na API Gemini: "+data.error.message+"\n\n[FUNCIONOU] Verifique a chave API.\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");setRepLoading(false);return;}
       const text=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
-      setReport(text||"Erro: "+JSON.stringify(data).slice(0,300));
-    }catch(e){setReport("Erro ao gerar: "+e.message);}
+      setReport(text||"[RESUMO] Resposta vazia da API.\n\n[FUNCIONOU] -\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");
+    }catch(e){setReport("[RESUMO] Erro: "+e.message+"\n\n[FUNCIONOU] -\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");}
     setRepLoading(false);
   }
 
@@ -654,16 +658,22 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
         return h("div",{key:g.id},
           h(SecTitle,{icon:g.icon,label:g.label}),
           h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:8}},
-            g.fields.filter(f=>last[f.key]!=null&&last[f.key]!=="").map(f=>
-              h("div",{key:f.key,style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}},
+            g.fields.filter(f=>last[f.key]!=null&&last[f.key]!=="").map(f=>{
+              const isRawDelta=["seguidores_liquidos"].includes(f.key);
+              const val=Number(last[f.key]);
+              const valColor=isRawDelta?(val>0?"#4A7C59":val<0?"#8B3A3A":undefined):undefined;
+              return h("div",{key:f.key,style:{background:T.card,border:"1px solid "+(isRawDelta&&val<0?"rgba(139,58,58,0.3)":T.border),borderRadius:12,padding:14}},
                 h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},f.icon+" "+f.label),
-                h("div",{style:{fontWeight:800,fontSize:20,marginBottom:4}},fmt(last[f.key])),
+                h("div",{style:{fontWeight:800,fontSize:20,marginBottom:4,color:valColor||T.text}},fmt(last[f.key])),
                 h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between"}},
-                  h(Delta,{curr:last[f.key],prev:prev&&prev[f.key]}),
+                  isRawDelta
+                    ? h("span",{style:{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:val>0?"rgba(74,124,89,0.1)":val<0?"rgba(139,58,58,0.1)":"transparent",color:val>0?"#4A7C59":val<0?"#8B3A3A":T.muted}},(val>0?"▲ ganho":val<0?"▼ perda":"= neutro"))
+                    : h(Delta,{curr:last[f.key],prev:prev&&prev[f.key]}),
                   h(Spark,{periods,k:f.key})
                 ),
                 h(GoalBar,{actual:last[f.key],goal:goals&&goals[f.key]})
-              )
+              );
+            }
             )
           )
         );
@@ -872,6 +882,52 @@ function AddDataView({client,onAdd,onBack}){
 
 function ReportView({report,loading,client,periods,goals,onBack,onExport,onPdf,canvaLoad,canvaMsg}){
   const last=periods&&periods[periods.length-1];
+
+  function PerfChart(){
+    if(!periods||periods.length<2) return null;
+    const metrics=[
+      {key:"seguidores",label:"Seguidores",color:"#94794A"},
+      {key:"alcance",label:"Alcance",color:"#4A7C59"},
+      {key:"impressoes",label:"Visualizações",color:"#4A6C8C"},
+      {key:"reels_views",label:"Reels",color:"#8C4A6C"},
+    ].filter(m=>periods.some(p=>p[m.key]!=null&&p[m.key]!==""));
+    const W=560,H=130,PT=10,PB=24;
+    const chartH=H-PT-PB;
+    const labels=periods.map(p=>p.periodo);
+    function pathFor(key){
+      const vals=periods.map(p=>Number(p[key])||0);
+      const mn=Math.min(...vals),mx=Math.max(...vals,1),rng=mx-mn||1;
+      const pts=vals.map((v,i)=>[(i/(periods.length-1))*W,PT+chartH-((v-mn)/rng)*chartH]);
+      return {path:"M"+pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L"),pts,lastVal:vals[vals.length-1],firstVal:vals[0]};
+    }
+    return h("div",{style:{background:"rgba(255,255,255,0.55)",border:"1px solid rgba(148,121,74,0.2)",borderRadius:12,padding:"16px 20px",marginBottom:14}},
+      h("div",{style:{fontFamily:"Arial,sans-serif",fontSize:"7pt",fontWeight:700,letterSpacing:"2px",textTransform:"uppercase",color:"#94794A",marginBottom:10}},"Evolução de Performance — "+periods[0].periodo+" → "+last.periodo),
+      h("div",{style:{display:"flex",gap:16,marginBottom:8}},
+        metrics.map(m=>h("div",{key:m.key,style:{display:"flex",alignItems:"center",gap:5}},
+          h("div",{style:{width:16,height:2,background:m.color,borderRadius:1}}),
+          h("span",{style:{fontFamily:"Arial,sans-serif",fontSize:"8pt",color:"#4A2C18"}},m.label)
+        ))
+      ),
+      h("svg",{width:"100%",viewBox:"0 0 "+W+" "+H,style:{overflow:"visible",display:"block"}},
+        [0,0.5,1].map((v,i)=>h("line",{key:i,x1:0,y1:PT+chartH*(1-v),x2:W,y2:PT+chartH*(1-v),stroke:"rgba(148,121,74,0.12)",strokeWidth:1})),
+        metrics.map(m=>{const {path,pts}=pathFor(m.key);return h("g",{key:m.key},h("path",{d:path,stroke:m.color,strokeWidth:2,fill:"none",strokeLinecap:"round",strokeLinejoin:"round"}),pts.map(([x,y],i)=>h("circle",{key:i,cx:x,cy:y,r:3,fill:m.color})));}),
+        labels.map((l,i)=>h("text",{key:i,x:(i/(periods.length-1))*W,y:H-4,textAnchor:i===0?"start":i===labels.length-1?"end":"middle",fontFamily:"Arial,sans-serif",fontSize:7,fill:"#8C7B6A"},l))
+      ),
+      h("div",{style:{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}},
+        metrics.map(m=>{
+          const {lastVal,firstVal}=pathFor(m.key);
+          const d=firstVal>0?((lastVal-firstVal)/firstVal*100).toFixed(1):null;
+          const up=d&&Number(d)>=0;
+          return h("div",{key:m.key,style:{display:"flex",alignItems:"center",gap:6,padding:"3px 10px",background:up?"rgba(74,124,89,0.08)":"rgba(139,58,58,0.08)",borderRadius:20}},
+            h("div",{style:{width:8,height:8,borderRadius:"50%",background:m.color}}),
+            h("span",{style:{fontFamily:"Arial,sans-serif",fontSize:"8pt",color:"#4A2C18",fontWeight:700}},m.label+": "+fmt(lastVal)),
+            d?h("span",{style:{fontFamily:"Arial,sans-serif",fontSize:"7.5pt",fontWeight:700,color:up?"#4A7C59":"#8B3A3A"}},(up?"▲":"▼")+" "+Math.abs(d)+"%"):null
+          );
+        })
+      )
+    );
+  }
+
   function ext(tag){if(!report)return "";const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";}
   function renderText(text){
     return text.split("\n").map((line,i)=>{
@@ -907,6 +963,7 @@ function ReportView({report,loading,client,periods,goals,onBack,onExport,onPdf,c
           h("div",{style:{color:T.muted,fontSize:13}},"A IA está analisando os dados...")
         )
       : h("div",{style:{display:"grid",gap:14}},
+          h(PerfChart),
           secs.map(s=>{const c=ext(s.tag);if(!c)return null;return h("div",{key:s.tag,style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:22}},
             h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:14}},h("span",null,s.icon),h("span",{style:{fontWeight:700,fontSize:14,color:T.mutedLight}},s.title)),
             renderText(c)
