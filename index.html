@@ -70,6 +70,18 @@ const GROUPS = [
   ]},
 ];
 
+const PUBLICO_FIELDS = [
+  {key:"publico_genero_masc",label:"Gênero Masculino (%)",icon:"👨",type:"number"},
+  {key:"publico_genero_fem",label:"Gênero Feminino (%)",icon:"👩",type:"number"},
+  {key:"publico_faixa_dominante",label:"Faixa Etária Dominante",icon:"📊",type:"text"},
+  {key:"publico_cidade_1",label:"Cidade #1",icon:"🏙️",type:"text"},
+  {key:"publico_cidade_1_pct",label:"Cidade #1 (%)",icon:"📍",type:"number"},
+  {key:"publico_cidade_2",label:"Cidade #2",icon:"🏙️",type:"text"},
+  {key:"publico_cidade_2_pct",label:"Cidade #2 (%)",icon:"📍",type:"number"},
+  {key:"publico_cidade_3",label:"Cidade #3",icon:"🏙️",type:"text"},
+  {key:"publico_cidade_3_pct",label:"Cidade #3 (%)",icon:"📍",type:"number"},
+];
+
 const ALL_FIELDS = GROUPS.flatMap(g=>g.fields);
 
 async function sbFetch(path,method,body,extra){
@@ -226,14 +238,82 @@ function App(){
     const prev=periods.length>1?periods[periods.length-2]:null;
     const line=p=>ALL_FIELDS.filter(f=>p[f.key]!=null&&p[f.key]!=="").map(f=>f.label+": "+p[f.key]).join(" | ");
     const goalLines=goals?ALL_FIELDS.filter(f=>goals[f.key]).map(f=>f.label+": meta "+goals[f.key]+", realizado "+(last[f.key]||"–")).join("\n"):"";
+    const publicoInfo=[
+      last.publico_genero_masc!=null?"Gênero: "+last.publico_genero_masc+"% masc / "+last.publico_genero_fem+"% fem":"",
+      last.publico_faixa_dominante?"Faixa dominante: "+last.publico_faixa_dominante:"",
+      last.publico_cidade_1?"Top cidades: "+[1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>last["publico_cidade_"+n]+(last["publico_cidade_"+n+"_pct"]?" ("+last["publico_cidade_"+n+"_pct"]+"%)":"")).join(", "):"",
+    ].filter(Boolean).join(" | ");
     const sys="Você é estrategista de Instagram para PMEs. Gere relatório em português com seções:\n[RESUMO] 2-3 frases\n[FUNCIONOU] 3 bullets\n[MELHORIA] 3 bullets\n[RECOMENDACOES] 3-5 ações concretas\n[CONTEUDO] Formatos e temas para o próximo período\n[METAS] Metas vs realizado\nMáximo 500 palavras. Seja direto.";
-    const msg="Cliente: @"+client.name+(client.niche?" | "+client.niche:"")+"\nPeríodo: "+last.periodo+"\n"+line(last)+(last.observacoes?"\nContexto: "+last.observacoes:"")+(prev?"\n\nAnterior ("+prev.periodo+"): "+line(prev):"\nPrimeiro período.")+(goalLines?"\n\nMetas:\n"+goalLines:"");
+    const msg="Cliente: @"+client.name+(client.niche?" | "+client.niche:"")+"\nPeríodo: "+last.periodo+"\n"+line(last)+(publicoInfo?"\nPúblico: "+publicoInfo:"")+(last.observacoes?"\nContexto: "+last.observacoes:"")+(prev?"\n\nAnterior ("+prev.periodo+"): "+line(prev):"\nPrimeiro período.")+(goalLines?"\n\nMetas:\n"+goalLines:"");
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,system:sys,messages:[{role:"user",content:msg}]})});
       const data=await res.json();
       setReport(data.content&&data.content[0]&&data.content[0].text||"Erro ao gerar.");
     }catch{setReport("Erro ao gerar relatório.");}
     setRepLoading(false);
+  }
+
+  function genPdf(){
+    const last=periods[periods.length-1];
+    const prev=periods.length>1?periods[periods.length-2]:null;
+    function ext(tag){const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";}
+    function fmtD(curr,prev){const d=pct(curr,prev);if(!d)return "";const up=Number(d)>=0;return " <span style=\"color:"+(up?"#4DFFB4":"#FF4D6D")+"\">"+(up?"▲":"▼")+" "+Math.abs(d)+"%</span>";}
+    const bigMetrics=["seguidores","alcance","impressoes","posts_views","reels_views","stories_views"].filter(k=>last[k]!=null&&last[k]!=="");
+    const publico=[
+      last.publico_genero_masc!=null?"<strong>Gênero:</strong> "+last.publico_genero_masc+"% masc · "+last.publico_genero_fem+"% fem":"",
+      last.publico_faixa_dominante?"<strong>Faixa dominante:</strong> "+last.publico_faixa_dominante:"",
+      [1,2,3].filter(n=>last["publico_cidade_"+n]).length?"<strong>Top cidades:</strong> "+[1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>last["publico_cidade_"+n]+(last["publico_cidade_"+n+"_pct"]?" ("+last["publico_cidade_"+n+"_pct"]+"%)":"")).join(", "):"",
+    ].filter(Boolean);
+    const allF=ALL_FIELDS;
+    const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"/><title>Relatório @${client.name} — ${last.periodo}</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#fff;color:#111;padding:0}
+.page{max-width:800px;margin:0 auto;padding:48px 40px}
+.header{border-bottom:3px solid #111;padding-bottom:20px;margin-bottom:32px;display:flex;justify-content:space-between;align-items:flex-end}
+.logo{font-size:13px;font-weight:800;letter-spacing:-0.5px;color:#9B4DFF}
+.title{font-size:28px;font-weight:900;line-height:1.1;margin-bottom:4px}
+.subtitle{font-size:14px;color:#666}
+.bignumbers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.bignum{border:1.5px solid #eee;border-radius:12px;padding:16px}
+.bignum-label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.bignum-value{font-size:26px;font-weight:900;line-height:1}
+.bignum-delta{font-size:12px;margin-top:4px}
+.section{margin-bottom:24px}
+.section-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#9B4DFF;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eee}
+.section-body{font-size:13px;line-height:1.7;color:#333}
+.bullet{display:flex;gap:8px;margin-bottom:6px}
+.bullet-dot{color:#9B4DFF;flex-shrink:0;font-weight:800}
+.publico{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.pub-card{border:1px solid #eee;border-radius:10px;padding:12px}
+.pub-label{font-size:10px;color:#888;margin-bottom:4px;text-transform:uppercase}
+.pub-value{font-size:15px;font-weight:700}
+.pub-sub{font-size:11px;color:#666;margin-top:2px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#aaa;display:flex;justify-content:space-between}
+@media print{body{padding:0}.page{padding:32px 32px}button{display:none!important}}
+</style></head><body>
+<div class="page">
+<div class="header">
+  <div>
+    <div class="title">Relatório de Performance</div>
+    <div class="subtitle">@${client.name}${client.niche?" · "+client.niche:""} · ${last.periodo}</div>
+  </div>
+  <div class="logo">ig estratégia</div>
+</div>
+
+<div class="bignumbers">
+${bigMetrics.map(k=>{const f=allF.find(x=>x.key===k);if(!f)return "";const d=pct(last[k],prev&&prev[k]);const up=d&&Number(d)>=0;return "<div class=\"bignum\"><div class=\"bignum-label\">"+f.icon+" "+f.label+"</div><div class=\"bignum-value\">"+fmt(last[k])+"</div>"+(d?"<div class=\"bignum-delta\" style=\"color:"+(up?"#16a34a":"#dc2626")+"\">"+(up?"▲":"▼")+" "+Math.abs(d)+"%</div>":"")+"</div>";}).join("")}
+</div>
+
+${publico.length?"<div class=\"section\"><div class=\"section-title\">👥 Público</div><div class=\"publico\">"+[last.publico_genero_masc!=null&&"<div class=\"pub-card\"><div class=\"pub-label\">Gênero</div><div class=\"pub-value\">"+last.publico_genero_masc+"% M · "+last.publico_genero_fem+"% F</div></div>",last.publico_faixa_dominante&&"<div class=\"pub-card\"><div class=\"pub-label\">Faixa Dominante</div><div class=\"pub-value\">"+last.publico_faixa_dominante+"</div></div>",...[1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>"<div class=\"pub-card\"><div class=\"pub-label\">Cidade #"+n+"</div><div class=\"pub-value\">"+last["publico_cidade_"+n]+"</div>"+(last["publico_cidade_"+n+"_pct"]?"<div class=\"pub-sub\">"+last["publico_cidade_"+n+"_pct"]+"%</div>":"")+"</div>")].filter(Boolean).join("")+"</div></div>":""}
+
+${[{tag:"RESUMO",title:"Resumo Executivo"},{tag:"FUNCIONOU",title:"O que funcionou"},{tag:"MELHORIA",title:"Pontos de melhoria"},{tag:"RECOMENDACOES",title:"Recomendações estratégicas"},{tag:"CONTEUDO",title:"Direcionamento de conteúdo"},{tag:"METAS",title:"Análise de metas"}].map(s=>{const c=ext(s.tag);if(!c)return "";const lines=c.split("\n").filter(l=>l.trim()).map(l=>{const ib=l.match(/^[-•*]|^\d+\./);const ct=ib?l.replace(/^[-•*]\s*/,"").replace(/^\d+\.\s*/,""):l;const ht=ct.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");return ib?"<div class=\"bullet\"><span class=\"bullet-dot\">·</span><span>"+ht+"</span></div>":"<p>"+ht+"</p>";}).join("");return "<div class=\"section\"><div class=\"section-title\">"+s.title+"</div><div class=\"section-body\">"+lines+"</div></div>";}).join("")}
+
+<div class="footer"><span>Gerado por ig estratégia</span><span>${last.periodo}</span></div>
+</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+    const w=window.open("","_blank");
+    if(w){w.document.write(html);w.document.close();}
   }
 
   async function exportCanva(){
@@ -284,7 +364,7 @@ function App(){
           view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onEditPeriod:editPeriodDate,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
           view==="goals"&&client&&h(GoalsView,{client,goals,periods,onSave:saveGoals,onBack:()=>setView("client")}),
           view==="addData"&&client&&h(AddDataView,{client,onAdd:addPeriod,onBack:()=>setView("client")}),
-          view==="report"&&h(ReportView,{report,loading:repLoading,client,periods,onBack:()=>setView("client"),onExport:exportCanva,canvaLoad,canvaMsg})
+          view==="report"&&h(ReportView,{report,loading:repLoading,client,periods,goals,onBack:()=>setView("client"),onExport:exportCanva,onPdf:genPdf,canvaLoad,canvaMsg})
         )
     )
   );
@@ -402,7 +482,34 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
             )
           )
         );
-      })
+      }),
+      PUBLICO_FIELDS.some(f=>last[f.key]!=null&&last[f.key]!=="")&&h("div",null,
+        h(SecTitle,{icon:"👥",label:"Público"}),
+        h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}},
+          last.publico_genero_masc!=null&&last.publico_genero_fem!=null&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14,gridColumn:"span 2"}},
+            h("div",{style:{fontSize:11,color:T.muted,marginBottom:10}},"👫 Gênero"),
+            h("div",{style:{display:"flex",gap:16}},
+              h("div",null,h("div",{style:{fontWeight:800,fontSize:20}},last.publico_genero_masc+"%"),h("div",{style:{fontSize:11,color:T.muted}},"Masculino")),
+              h("div",null,h("div",{style:{fontWeight:800,fontSize:20}},last.publico_genero_fem+"%"),h("div",{style:{fontSize:11,color:T.muted}},"Feminino"))
+            ),
+            h("div",{style:{marginTop:10,height:8,borderRadius:4,background:T.border,overflow:"hidden",display:"flex"}},
+              h("div",{style:{width:last.publico_genero_masc+"%",background:"#4D9FFF",borderRadius:"4px 0 0 4px"}}),
+              h("div",{style:{width:last.publico_genero_fem+"%",background:T.accent,borderRadius:"0 4px 4px 0"}})
+            )
+          ),
+          last.publico_faixa_dominante&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}},
+            h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},"📊 Faixa Etária Dominante"),
+            h("div",{style:{fontWeight:800,fontSize:20}},last.publico_faixa_dominante)
+          ),
+          [1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>
+            h("div",{key:n,style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}},
+              h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},"🏙️ Cidade #"+n),
+              h("div",{style:{fontWeight:800,fontSize:18}},last["publico_cidade_"+n]),
+              last["publico_cidade_"+n+"_pct"]&&h("div",{style:{fontSize:12,color:T.muted,marginTop:2}},last["publico_cidade_"+n+"_pct"]+"%")
+            )
+          )
+        )
+      )
     ),
     tab==="historico"&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}},
       h("div",{style:{overflowX:"auto"}},
@@ -425,8 +532,8 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
                     pv&&p[f.key]&&h(Delta,{curr:p[f.key],prev:pv[f.key]})
                   )
                 ),
-                h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap",display:"flex",gap:6,alignItems:"center"}},
-                  h("button",{onClick:()=>{const np=window.prompt("Alterar período:",p.periodo);if(np&&np.trim()&&np.trim()!==p.periodo)onEditPeriod(p.id,np.trim());},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:12,padding:"2px 8px",borderRadius:6,border:"1px solid "+T.border}},"✏️"),
+                h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap"}},
+                  h("button",{onClick:()=>{const np=window.prompt("Alterar período (ex: Mai/2025):",p.periodo);if(np&&np.trim()&&np.trim()!==p.periodo)onEditPeriod(p.id,np.trim());},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,marginRight:8}},"✏️"),
                   h("button",{onClick:()=>{if(window.confirm("Remover período "+p.periodo+"?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}},"×")
                 )
               );
@@ -566,6 +673,10 @@ function AddDataView({client,onAdd,onBack}){
         g.fields.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:true}))
       )
     )),
+    h(SecTitle,{icon:"👥",label:"Público"}),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
+      PUBLICO_FIELDS.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:f.type==="number"}))
+    ),
     h(Fld,{label:"Observações do período",value:obs,onChange:setObs,placeholder:"Campanha, feriado, lançamento...",multiline:true}),
     h("div",{style:{marginTop:18,display:"flex",gap:10}},
       h(Btn,{onClick:save,disabled:!periodo.trim()||saving},saving?"Salvando...":"Salvar período"),
@@ -574,7 +685,7 @@ function AddDataView({client,onAdd,onBack}){
   );
 }
 
-function ReportView({report,loading,client,periods,onBack,onExport,canvaLoad,canvaMsg}){
+function ReportView({report,loading,client,periods,goals,onBack,onExport,onPdf,canvaLoad,canvaMsg}){
   const last=periods&&periods[periods.length-1];
   function ext(tag){if(!report)return "";const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";}
   function renderText(text){
@@ -615,12 +726,15 @@ function ReportView({report,loading,client,periods,onBack,onExport,canvaLoad,can
             h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:14}},h("span",null,s.icon),h("span",{style:{fontWeight:700,fontSize:14,color:T.mutedLight}},s.title)),
             renderText(c)
           );}),
-          h("div",{style:{background:T.accentSoft,border:"1px solid "+T.accentMid+"44",borderRadius:14,padding:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}},
+          h("div",{style:{background:T.accentSoft,border:"1px solid "+T.accentMid+"44",borderRadius:14,padding:18,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,flexWrap:"wrap"}},
             h("div",null,
-              h("div",{style:{fontWeight:700,fontSize:14,color:T.accent}},"🎨 Exportar para Canva"),
-              h("div",{style:{color:T.muted,fontSize:13,marginTop:2}},"Abre o template com conteúdo pronto")
+              h("div",{style:{fontWeight:700,fontSize:14,color:T.accent}},"📄 Exportar Relatório"),
+              h("div",{style:{color:T.muted,fontSize:13,marginTop:2}},"Gera PDF completo ou abre no Canva")
             ),
-            h(Btn,{onClick:onExport,disabled:canvaLoad},canvaLoad?"Abrindo...":"Exportar →")
+            h("div",{style:{display:"flex",gap:8}},
+              h(Btn,{onClick:onPdf,small:true},"📄 Gerar PDF"),
+              h(Btn,{onClick:onExport,disabled:canvaLoad,small:true,outline:true},canvaLoad?"Abrindo...":"🎨 Canva")
+            )
           )
         )
   );
