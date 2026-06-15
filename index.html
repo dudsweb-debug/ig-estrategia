@@ -183,8 +183,8 @@ function App(){
   const [goals,setGoals]=useState(null);
   const [loading,setLoading]=useState(true);
   const [tab,setTab]=useState("overview");
-  const [report,setReport]=useState("");
-  const [repLoading,setRepLoading]=useState(false);
+  
+  
   const [canvaMsg,setCanvaMsg]=useState("");
   const [canvaLoad,setCanvaLoad]=useState(false);
   const [toast,setToast]=useState("");
@@ -233,53 +233,9 @@ function App(){
     catch(e){showErr("Erro: "+e.message);}
   }
 
-  async function genReport(){
-    if(!periods.length) return;
-    setRepLoading(true);setReport("");setView("report");
-    const last=periods[periods.length-1];
-    const prev=periods.length>1?periods[periods.length-2]:null;
-    const line=p=>ALL_FIELDS.filter(f=>p[f.key]!=null&&p[f.key]!=="").map(f=>f.label+": "+p[f.key]).join(" | ");
-    const goalLines=goals?ALL_FIELDS.filter(f=>goals[f.key]).map(f=>f.label+": meta "+goals[f.key]+", realizado "+(last[f.key]||"–")).join("\n"):"";
-    const publicoInfo=[
-      last.publico_genero_masc!=null?"Gênero: "+last.publico_genero_masc+"% masc / "+last.publico_genero_fem+"% fem":"",
-      last.publico_faixa_dominante?"Faixa dominante: "+last.publico_faixa_dominante:"",
-      last.publico_cidade_1?"Top cidades: "+[1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>last["publico_cidade_"+n]+(last["publico_cidade_"+n+"_pct"]?" ("+last["publico_cidade_"+n+"_pct"]+"%)":"")).join(", "):"",
-    ].filter(Boolean).join(" | ");
-    const sys=[
-      "Voce e estrategista senior de Instagram para PMEs.",
-      "Analise honesta, critica e orientada a resultados.",
-      "Gere relatorio em portugues com estas secoes exatas:",
-      "",
-      "[RESUMO] 2-3 frases com contexto estrategico real. Se ha estagnacao, perda de seguidores ou queda, diga claramente e explique o impacto para o negocio.",
-      "",
-      "[FUNCIONOU] 3 bullets do que performou melhor com dados concretos. Se quase nada funcionou, seja honesto e destaque o melhor relativo.",
-      "",
-      "[MELHORIA] 3-5 bullets de diagnostico critico: o que esta travando o crescimento, quais metricas preocupam, padroes negativos. Mencione formatos, frequencia, engajamento baixo, perda de seguidores.",
-      "",
-      "[RECOMENDACOES] 5 acoes concretas priorizadas. Cada acao: O QUE fazer + POR QUE baseado nos dados + COMO fazer de forma especifica. Nunca seja generico.",
-      "",
-      "[CONTEUDO] Direcionamento tatico: formatos prioritarios, temas recomendados, frequencia de postagem, melhores horarios se disponivel, e o que EVITAR com base nos dados.",
-      "",
-      "[METAS] Se ha metas: analise o que foi atingido com diagnostico do motivo. Se nao ha metas: sugira 3-5 metas realistas e mensuráveis para o proximo periodo baseadas no historico.",
-      "",
-      "Seja direto, profissional e acionavel. Maximo 600 palavras."
-    ].join("\n")
-    const msg="Cliente: @"+client.name+(client.niche?" | "+client.niche:"")+"\nPeríodo: "+last.periodo+"\n"+line(last)+(publicoInfo?"\nPúblico: "+publicoInfo:"")+(last.observacoes?"\nContexto: "+last.observacoes:"")+(prev?"\n\nAnterior ("+prev.periodo+"): "+line(prev):"\nPrimeiro período.")+(goalLines?"\n\nMetas:\n"+goalLines:"");
-    try{
-      const geminiKey="AIzaSyAQ.Ab8RN6LWIpngeNrFIvohsjs_DhAUq_RiAqzlcXtUUZJz7hhrAA";
-      const fullPrompt=sys+"\n\nDADOS DO CLIENTE:\n"+msg;
-      const geminiBody={contents:[{role:"user",parts:[{text:fullPrompt}]}],generationConfig:{maxOutputTokens:2000,temperature:0.8}};
-      const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+geminiKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(geminiBody)});
-      const data=await res.json();
-      if(data.error){setReport("[RESUMO] Erro na API Gemini: "+data.error.message+"\n\n[FUNCIONOU] Verifique a chave API.\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");setRepLoading(false);return;}
-      const text=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
-      setReport(text||"[RESUMO] Resposta vazia da API.\n\n[FUNCIONOU] -\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");
-    }catch(e){setReport("[RESUMO] Erro: "+e.message+"\n\n[FUNCIONOU] -\n\n[MELHORIA] -\n\n[RECOMENDACOES] -\n\n[CONTEUDO] -\n\n[METAS] -");}
-    setRepLoading(false);
-  }
-
   function genPdf(){
-    if(!report||!periods.length) return;
+    if(!periods.length) return;
+    const report="";
     const last=periods[periods.length-1];
     const prev=periods.length>1?periods[periods.length-2]:null;
     function ext(tag){const m=report.match(new RegExp("\\["+tag+"\\]([\\s\\S]*?)(?=\\[|$)"));return m?m[1].trim():"";}
@@ -533,9 +489,9 @@ function App(){
         h(Btn,{small:true,outline:true,onClick:()=>setView("editClient")},"✏️ Editar"),
         h(Btn,{small:true,outline:true,onClick:()=>setView("goals")},"🎯 Metas"),
         h(Btn,{small:true,outline:true,onClick:()=>setView("addData")},"+ Período"),
-        h(Btn,{small:true,onClick:genReport,disabled:!periods.length},"✦ Relatório")
+        h(Btn,{small:true,onClick:genPdf,disabled:!periods.length},"📄 Gerar PDF")
       ),
-      view==="report"&&report&&!repLoading&&h(Btn,{small:true,onClick:exportCanva,disabled:canvaLoad},"🎨 Canva")
+      
     )
   );
 
@@ -553,7 +509,7 @@ function App(){
           view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onEditPeriod:editPeriodDate,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
           view==="goals"&&client&&h(GoalsView,{client,goals,periods,onSave:saveGoals,onBack:()=>setView("client")}),
           view==="addData"&&client&&h(AddDataView,{client,onAdd:addPeriod,onBack:()=>setView("client")}),
-          view==="report"&&h(ReportView,{report,loading:repLoading,client,periods,goals,onBack:()=>setView("client"),onExport:exportCanva,onPdf:genPdf,canvaLoad,canvaMsg})
+          
         )
     )
   );
