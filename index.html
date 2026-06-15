@@ -228,6 +228,12 @@ function App(){
     try{const rows=await DB.updatePeriod(id,{periodo:newPeriodo});const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===id?p:x).sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período atualizado!");}}
     catch(e){showErr("Erro: "+e.message);}
   }
+  const [editingPeriod,setEditingPeriod]=useState(null);
+  function openEditPeriod(p){setEditingPeriod(p);setView("editPeriod");}
+  async function saveEditPeriod(data){
+    try{const rows=await DB.updatePeriod(editingPeriod.id,data);const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===editingPeriod.id?p:x).sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período atualizado!");setView("client");setEditingPeriod(null);}}
+    catch(e){showErr("Erro: "+e.message);}
+  }
   async function saveGoals(data){
     try{const rows=await DB.upsertGoals(client.id,data);const g=Array.isArray(rows)?rows[0]:rows;setGoals(g);showToast("✓ Metas salvas!");setView("client");setTab("metas");}
     catch(e){showErr("Erro: "+e.message);}
@@ -506,9 +512,10 @@ function App(){
           view==="home"&&h(HomeView,{clients,onSelect:selClient,onNew:()=>setView("newClient"),onDelete:delClient}),
           view==="newClient"&&h(NewClientView,{onCreate:createClient,onBack:()=>setView("home")}),
           view==="editClient"&&client&&h(EditClientView,{client,onSave:updateClient,onBack:()=>setView("client")}),
-          view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onEditPeriod:editPeriodDate,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
+          view==="client"&&client&&h(ClientView,{client,periods,goals,tab,setTab,onDeletePeriod:delPeriod,onEditPeriod:editPeriodDate,onOpenEdit:openEditPeriod,onAddData:()=>setView("addData"),onGoals:()=>setView("goals")}),
           view==="goals"&&client&&h(GoalsView,{client,goals,periods,onSave:saveGoals,onBack:()=>setView("client")}),
           view==="addData"&&client&&h(AddDataView,{client,onAdd:addPeriod,onBack:()=>setView("client")}),
+          view==="editPeriod"&&editingPeriod&&h(EditPeriodView,{period:editingPeriod,onSave:saveEditPeriod,onBack:()=>{setView("client");setEditingPeriod(null);}}),
           
         )
     )
@@ -583,7 +590,7 @@ function EditClientView({client,onSave,onBack}){
   );
 }
 
-function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod,onAddData,onGoals}){
+function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod,onOpenEdit,onAddData,onGoals}){
   const last=periods[periods.length-1];
   const prev=periods.length>1?periods[periods.length-2]:null;
   const tabs=[["overview","Visão Geral"],["historico","Histórico"],["metas","Metas"]];
@@ -684,7 +691,7 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
                   )
                 ),
                 h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap"}},
-                  h("button",{onClick:()=>{const np=window.prompt("Alterar período (ex: Mai/2025):",p.periodo);if(np&&np.trim()&&np.trim()!==p.periodo)onEditPeriod(p.id,np.trim());},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,marginRight:8}},"✏️"),
+                  h("button",{onClick:()=>onOpenEdit(p),style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,marginRight:8,padding:"2px 6px",borderRadius:4,border:"1px solid "+T.border}},"✏️ editar"),
                   h("button",{onClick:()=>{if(window.confirm("Remover período "+p.periodo+"?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}},"×")
                 )
               );
@@ -935,6 +942,45 @@ function ReportView({report,loading,client,periods,goals,onBack,onExport,onPdf,c
             )
           )
         )
+  );
+}
+
+function EditPeriodView({period,onSave,onBack}){
+  const [data,setData]=useState(()=>{
+    const d={};
+    GROUPS.flatMap(g=>g.fields).forEach(f=>{d[f.key]=period[f.key]!=null&&period[f.key]!==""?period[f.key]:"";});
+    d.periodo=period.periodo||"";
+    d.observacoes=period.observacoes||"";
+    return d;
+  });
+  const [saving,setSaving]=useState(false);
+  function setF(key,val){setData(prev=>Object.assign({},prev,{[key]:val}));}
+  async function go(){
+    if(!data.periodo.trim()){alert("Informe o período.");return;}
+    setSaving(true);
+    const clean={periodo:data.periodo.trim(),observacoes:data.observacoes};
+    GROUPS.flatMap(g=>g.fields).forEach(f=>{
+      clean[f.key]=data[f.key]!==""&&data[f.key]!==null?data[f.key]:null;
+    });
+    await onSave(clean);
+    setSaving(false);
+  }
+  return h("div",{style:{maxWidth:700}},
+    h(Back,{onClick:onBack}),
+    h("h2",{style:{margin:"0 0 4px",fontWeight:800}},"✏️ Editar período"),
+    h("p",{style:{color:T.muted,fontSize:13,marginBottom:20}},"Edite os dados do período e salve."),
+    h(Fld,{label:"Período *",value:data.periodo,onChange:v=>setF("periodo",v),placeholder:"ex: Abr/2025"}),
+    GROUPS.map(g=>h("div",{key:g.id},
+      h(SecTitle,{icon:g.icon,label:g.label}),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
+        g.fields.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:data[f.key]||"",onChange:v=>setF(f.key,v),placeholder:"–",number:true}))
+      )
+    )),
+    h(Fld,{label:"Observações",value:data.observacoes,onChange:v=>setF("observacoes",v),placeholder:"Contexto do período...",multiline:true}),
+    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+      h(Btn,{onClick:go,disabled:!data.periodo.trim()||saving},saving?"Salvando...":"Salvar alterações"),
+      h(Btn,{outline:true,onClick:onBack},"Cancelar")
+    )
   );
 }
 
