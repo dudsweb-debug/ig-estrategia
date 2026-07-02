@@ -105,7 +105,7 @@ const DB = {
   deletePeriod: (id)=>sbFetch("periods?id=eq."+id,"DELETE",null,{"Prefer":"return=minimal"}),
   updatePeriod: (id,data)=>sbFetch("periods?id=eq."+id,"PATCH",data),
   getGoals: async(cid)=>{const r=await sbFetch("goals?client_id=eq."+cid+"&select=*");return r&&r[0]||null;},
-  upsertGoals: (cid,data)=>sbFetch("goals","POST",Object.assign({client_id:cid,updated_at:new Date().toISOString()},data),{"Prefer":"return=representation,resolution=merge-duplicates"}),
+  upsertGoals: (cid,data)=>sbFetch("goals?on_conflict=client_id","POST",Object.assign({client_id:cid,updated_at:new Date().toISOString()},data),{"Prefer":"return=representation,resolution=merge-duplicates"}),
 };
 
 function fmt(n){
