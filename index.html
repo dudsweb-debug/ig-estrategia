@@ -117,6 +117,14 @@ function fmt(n){
   if(abs>=1000) return prefix+(abs/1000).toFixed(1)+"K";
   return num.toLocaleString("pt-BR");
 }
+
+const MESES={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+function periodKey(p){
+  if(!p) return 0;
+  const m=String(p).toLowerCase().match(/([a-zç]{3})[^0-9]*(\d{4})/);
+  if(!m) return 0;
+  return (Number(m[2])||0)*100+(MESES[m[1]]||0);
+}
 function pct(a,b){
   if(!b||!a||Number(b)===0) return null;
   return (((Number(a)-Number(b))/Number(b))*100).toFixed(1);
@@ -199,7 +207,7 @@ function App(){
 
   async function selClient(c){
     setClient(c);setLoading(true);
-    try{const[p,g]=await Promise.all([DB.getPeriods(c.id),DB.getGoals(c.id)]);setPeriods(p||[]);setGoals(g);}
+    try{const[p,g]=await Promise.all([DB.getPeriods(c.id),DB.getGoals(c.id)]);setPeriods((p||[]).sort((a,b)=>periodKey(a.periodo)-periodKey(b.periodo)));setGoals(g);}
     catch(e){showErr(e.message);}
     setLoading(false);setView("client");setTab("overview");
   }
@@ -217,7 +225,7 @@ function App(){
     if(client&&client.id===id){setClient(null);setView("home");}
   }
   async function addPeriod(data){
-    try{const rows=await DB.createPeriod(Object.assign({},data,{client_id:client.id}));const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>[...prev,p].sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período salvo!");setView("client");}}
+    try{const rows=await DB.createPeriod(Object.assign({},data,{client_id:client.id}));const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>[...prev,p].sort((a,b)=>periodKey(a.periodo)-periodKey(b.periodo)));showToast("✓ Período salvo!");setView("client");}}
     catch(e){showErr("Erro: "+e.message);}
   }
   async function delPeriod(id){
@@ -225,13 +233,13 @@ function App(){
     setPeriods(p=>p.filter(x=>x.id!==id));showToast("Período removido.");
   }
   async function editPeriodDate(id,newPeriodo){
-    try{const rows=await DB.updatePeriod(id,{periodo:newPeriodo});const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===id?p:x).sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período atualizado!");}}
+    try{const rows=await DB.updatePeriod(id,{periodo:newPeriodo});const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===id?p:x).sort((a,b)=>periodKey(a.periodo)-periodKey(b.periodo)));showToast("✓ Período atualizado!");}}
     catch(e){showErr("Erro: "+e.message);}
   }
   const [editingPeriod,setEditingPeriod]=useState(null);
   function openEditPeriod(p){setEditingPeriod(p);setView("editPeriod");}
   async function saveEditPeriod(data){
-    try{const rows=await DB.updatePeriod(editingPeriod.id,data);const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===editingPeriod.id?p:x).sort((a,b)=>a.periodo.localeCompare(b.periodo)));showToast("✓ Período atualizado!");setView("client");setEditingPeriod(null);}}
+    try{const rows=await DB.updatePeriod(editingPeriod.id,data);const p=Array.isArray(rows)?rows[0]:rows;if(p){setPeriods(prev=>prev.map(x=>x.id===editingPeriod.id?p:x).sort((a,b)=>periodKey(a.periodo)-periodKey(b.periodo)));showToast("✓ Período atualizado!");setView("client");setEditingPeriod(null);}}
     catch(e){showErr("Erro: "+e.message);}
   }
   async function saveGoals(data){
