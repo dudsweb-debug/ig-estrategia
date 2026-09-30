@@ -166,6 +166,55 @@ function Spark(p){
     vals.map((v,i)=>h("div",{key:i,style:{width:7,borderRadius:2,height:Math.max((v/max)*100,4)+"%",background:i===vals.length-1?T.accent:T.accentMid+"55"}}))
   );
 }
+function BigChart(p){
+  // p: {periods, fieldKey, label, icon, color}
+  const pts=(p.periods||[]).filter(x=>x[p.fieldKey]!=null&&x[p.fieldKey]!=="");
+  if(pts.length<2) return null;
+  const vals=pts.map(x=>Number(x[p.fieldKey])||0);
+  const min=Math.min(...vals), max=Math.max(...vals);
+  const range=(max-min)||1;
+  const W=600,H=140,padX=36,padY=20;
+  const stepX=pts.length>1?(W-padX*2)/(pts.length-1):0;
+  const xy=vals.map((v,i)=>{
+    const x=padX+i*stepX;
+    const y=padY+(1-(v-min)/range)*(H-padY*2);
+    return [x,y];
+  });
+  const linePts=xy.map(([x,y])=>x+","+y).join(" ");
+  const areaPts="M"+xy.map(([x,y])=>x+","+y).join(" L")+` L${xy[xy.length-1][0]},${H-padY} L${xy[0][0]},${H-padY} Z`;
+  const last=vals[vals.length-1], first=vals[0];
+  const changePct=first!==0?(((last-first)/Math.abs(first))*100).toFixed(1):null;
+  const up=last>=first;
+  return h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:"18px 20px",flex:1,minWidth:280}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}},
+      h("div",null,
+        h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},p.icon+" "+p.label),
+        h("div",{style:{fontSize:24,fontWeight:800,color:T.text}},fmt(last))
+      ),
+      changePct!==null&&h("span",{style:{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red}},(up?"▲ ":"▼ ")+Math.abs(changePct)+"%")
+    ),
+    h("svg",{width:"100%",height:H,viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:"none",style:{overflow:"visible"}},
+      h("defs",null,h("linearGradient",{id:"grad-"+p.fieldKey,x1:"0",y1:"0",x2:"0",y2:"1"},
+        h("stop",{offset:"0%",stopColor:p.color,stopOpacity:"0.25"}),
+        h("stop",{offset:"100%",stopColor:p.color,stopOpacity:"0"})
+      )),
+      [0.25,0.5,0.75].map(f=>h("line",{key:f,x1:padX,x2:W-padX,y1:padY+f*(H-padY*2),y2:padY+f*(H-padY*2),stroke:T.border,strokeWidth:"1"})),
+      h("path",{d:areaPts,fill:"url(#grad-"+p.fieldKey+")"}),
+      h("polyline",{points:linePts,fill:"none",stroke:p.color,strokeWidth:"2.5",strokeLinecap:"round",strokeLinejoin:"round"}),
+      xy.map(([x,y],i)=>i===xy.length-1
+        ? h(Fragment,{key:i},
+            h("circle",{cx:x,cy:y,r:10,fill:p.color,fillOpacity:"0.18"}),
+            h("circle",{cx:x,cy:y,r:5,fill:p.color,stroke:T.card,strokeWidth:"2"}),
+            h("text",{x:Math.min(Math.max(x,34),W-34),y:Math.max(y-16,14),textAnchor:x>W-50?"end":x<50?"start":"middle",fontSize:"15",fontWeight:"800",fill:p.color,fontFamily:"inherit"},fmt(vals[i]))
+          )
+        : h("circle",{key:i,cx:x,cy:y,r:3,fill:T.card,stroke:p.color,strokeWidth:"2",opacity:"0.55"})
+      )
+    ),
+    h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:4}},
+      pts.map((x,i)=>h("span",{key:i,style:{fontSize:9,color:i===pts.length-1?p.color:T.muted,fontWeight:i===pts.length-1?700:400}},x.periodo))
+    )
+  );
+}
 function GoalBar(p){
   if(!p.goal) return null;
   const ratio=Math.min(Number(p.actual||0)/Number(p.goal),1);
@@ -623,6 +672,11 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
     ),
     tab==="overview"&&h("div",null,
       h("div",{style:{fontSize:12,color:T.muted,marginBottom:16}},"Último período: ",h("strong",{style:{color:T.mutedLight}},last.periodo),prev&&h(Fragment,null," · vs ",h("strong",{style:{color:T.mutedLight}},prev.periodo))),
+      periods.length>=2&&h("div",{style:{display:"flex",gap:14,marginBottom:24,flexWrap:"wrap"}},
+        h(BigChart,{periods,fieldKey:"seguidores",label:"Seguidores",icon:"👥",color:T.accent}),
+        h(BigChart,{periods,fieldKey:"alcance",label:"Contas Alcançadas",icon:"📡",color:T.green}),
+        h(BigChart,{periods,fieldKey:"impressoes",label:"Visualizações Totais",icon:"👁",color:"#4D9FFF"})
+      ),
       GROUPS.map(g=>{
         const has=g.fields.some(f=>last[f.key]!=null&&last[f.key]!=="");
         if(!has) return null;
