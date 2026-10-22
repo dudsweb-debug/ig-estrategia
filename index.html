@@ -3,34 +3,112 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ig estratégia</title>
+<title>HDG HUB · painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0F0F13;font-family:system-ui,sans-serif;color:#F0EEF8}
+html{-webkit-text-size-adjust:100%}
+body{background:#F8F0E0;font-family:'Montserrat',sans-serif;color:#1E120C;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'League Spartan',sans-serif;font-weight:700;letter-spacing:-.5px;color:#1E120C}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:32px;height:32px;border:3px solid #2A2A38;border-top-color:#C77DFF;border-radius:50%;animation:spin 1s linear infinite}
-input,textarea{width:100%;background:#16161D;border:1px solid #2A2A38;border-radius:10px;color:#F0EEF8;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;font-family:inherit}
+.spinner{width:32px;height:32px;border:3px solid #E1D7C7;border-top-color:#3C1E12;border-radius:50%;animation:spin 1s linear infinite}
+input,textarea{width:100%;background:#FFFFFF;border:1.5px solid #867369;border-radius:8px;color:#1E120C;padding:11px 14px;font-size:15px;outline:none;font-family:inherit;min-height:48px}
+input:focus,textarea:focus{border:2px solid #3C1E12;padding:10.5px 13.5px}
+input::placeholder,textarea::placeholder{color:#9A8577}
 textarea{resize:vertical}
 button{cursor:pointer;font-family:inherit}
+:focus-visible{outline:3px solid #3C1E12;outline-offset:3px;border-radius:4px}
+.on-dark :focus-visible{outline-color:#F0AE42}
+.ov{font:700 12px/1.2 'Montserrat',sans-serif;letter-spacing:2px;text-transform:uppercase;color:#3C1E12}
+.ov::before{content:"// "}
+.btn{font:700 13px/1 'Montserrat',sans-serif;letter-spacing:.6px;text-transform:uppercase;height:44px;padding:0 20px;border-radius:8px;border:0;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;transition:background .12s cubic-bezier(.2,0,0,1)}
+.btn.sm{height:36px;padding:0 14px;font-size:12px}
+.btn-p{background:#F0AE42;color:#3C1E12;box-shadow:inset 0 0 0 2px #3C1E12}
+.btn-p:hover{background:#F5C77C}.btn-p:active{background:#D59A3B;transform:translateY(1px)}
+.btn-o{background:transparent;color:#3C1E12;box-shadow:inset 0 0 0 2px #3C1E12}
+.btn-o:hover{background:rgba(240,174,66,.18)}
+.on-dark .btn-p{box-shadow:none}
+.on-dark .btn-o{color:#F8F0E0;box-shadow:inset 0 0 0 2px #674F45}
+.on-dark .btn-o:hover{background:transparent;box-shadow:inset 0 0 0 2px #F0AE42}
+.btn[disabled],.btn[disabled]:hover{background:#E4DED8;color:#867369;box-shadow:none;cursor:not-allowed;transform:none}
+.on-dark .btn[disabled]{background:#503429;color:#A79990}
+.card-link{transition:border-color .12s cubic-bezier(.2,0,0,1)}
+.card-link:hover{border-color:#3C1E12 !important}
+.lnk:hover{color:#1E120C !important}
+.th{font:700 11px/1.2 'Montserrat',sans-serif;letter-spacing:1px;text-transform:uppercase;color:#3C1E12;white-space:nowrap}
+.tr:hover td{background:#FBF6EC !important}
+@media(max-width:640px){
+  .g2{grid-template-columns:1fr !important}
+  .span2{grid-column:auto !important}
+  .hdr-email{display:none}
+  .hdr-actions .btn.sm{height:34px;padding:0 10px;font-size:11px;letter-spacing:.3px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none !important;animation-duration:.01ms !important}}
 </style>
 </head>
 <body>
-<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8884A0">Carregando...</div></div>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#7E685A;font-family:Montserrat,sans-serif">Carregando...</div></div>
 <script>
 const SUPABASE_URL = "https://oiikkxokkqdxkoalwtkv.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paWtreG9ra3FkeGtvYWx3dGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjQzMDcsImV4cCI6MjA5NjkwMDMwN30.z2dlcSTe7HEiLtzn3oE2LqjoNkkLEYNlAtZ-6yKorfU";
 const CANVA_ID = "DAHMdIAbGwo";
 const {createElement:h,useState,useEffect,useRef,Fragment} = React;
-
+// ── Tema: design system HDG HUB (base visual da Hora do Gole, versão neutra de ferramenta) ──
 const T = {
-  bg:"#0F0F13",surface:"#16161D",card:"#1C1C26",border:"#2A2A38",
-  accent:"#C77DFF",accentSoft:"rgba(155,77,255,0.13)",accentMid:"#9B4DFF",
-  green:"#4DFFB4",greenSoft:"rgba(77,255,180,0.13)",
-  red:"#FF4D6D",redSoft:"rgba(255,77,109,0.13)",
-  yellow:"#FFD166",text:"#F0EEF8",muted:"#8884A0",mutedLight:"#B8B4CC",
+  bg:"#F8F0E0",surface:"#FFFFFF",card:"#FFFFFF",sunken:"#F2E6D1",border:"#E1D7C7",borderStrong:"#867369",
+  head:"#3C1E12",headText:"#F8F0E0",headMuted:"#D9C8B4",headLine:"#674F45",
+  accent:"#3C1E12",accentSoft:"rgba(240,174,66,0.18)",accentMid:"#F0AE42",
+  action:"#F0AE42",actionHover:"#F5C77C",actionActive:"#D59A3B",onAction:"#3C1E12",
+  chart:"#3C1E12",chartArea:"#F0AE42",chartGrid:"#E9DFCF",spark:"#C8BFB8",
+  green:"#2F5D2A",greenSoft:"#E4EDD8",
+  red:"#9B1F14",redSoft:"#F8DDD6",
+  yellow:"#7A5200",yellowSoft:"#FBEDC2",
+  text:"#1E120C",muted:"#7E685A",mutedLight:"#4A3A30",
+  rCtl:8,rCard:16,rCont:24,
+  fHead:"'League Spartan',sans-serif",fBody:"'Montserrat',sans-serif",
 };
+
+// ícones Lucide (ISC), traço 1,5 px, sempre na cor do texto
+const ICONS = {
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+  bookmark:'<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+  repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  reply:'<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+  back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  close:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+  keyboard:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+};
+const ICON_OF = {
+  seguidores:"users",seguidores_liquidos:"trend",alcance:"target",impressoes:"eye",visitas_perfil:"search",cliques_bio:"link",cliques_endereco:"pin",
+  posts_views:"eye",posts_curtidas:"heart",posts_comentarios:"chat",posts_compartilhamentos:"share",posts_salvamentos:"bookmark",posts_reposts:"repeat",
+  reels_views:"eye",reels_curtidas:"heart",reels_comentarios:"chat",reels_compartilhamentos:"share",reels_salvamentos:"bookmark",
+  stories_views:"eye",stories_curtidas:"heart",stories_respostas:"reply",stories_compartilhamentos:"share",
+  lives_views:"eye",lives_curtidas:"heart",lives_comentarios:"chat",
+};
+function Ic(p){
+  return h("svg",{width:p.size||16,height:p.size||16,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.5,strokeLinecap:"round",strokeLinejoin:"round","aria-hidden":"true",style:Object.assign({flexShrink:0,display:"block"},p.style||{}),dangerouslySetInnerHTML:{__html:ICONS[p.n]||""}});
+}
+// Papel de quem está no painel. Sem login (index-dna.html) vale "admin"; a versão com login define HDG_PAPEL.
+const EH_ADMIN=()=>window.HDG_PAPEL!=="cliente";
+const KPI_KEYS=["seguidores","alcance","impressoes","visitas_perfil"];
+function pctBr(d){return String(Math.abs(Number(d))).replace(".",",");}
 
 const GROUPS = [
   {id:"geral",label:"Visão Geral",icon:"📊",fields:[
@@ -85,12 +163,13 @@ const PUBLICO_FIELDS = [
 const ALL_FIELDS = GROUPS.flatMap(g=>g.fields);
 
 async function sbFetch(path,method,body,extra){
-  const headers = {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"return=representation"};
+  const headers = {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+((await AUTH.token())||SUPABASE_KEY),"Content-Type":"application/json","Prefer":"return=representation"};
   if(extra) Object.assign(headers,extra);
   const opts = {method:method||"GET",headers};
   if(body) opts.body = JSON.stringify(body);
   const res = await fetch(SUPABASE_URL+"/rest/v1/"+path,opts);
   const text = await res.text();
+  if(res.status===401){AUTH.save(null);location.reload();}
   if(!res.ok) throw new Error(text||"Erro "+res.status);
   return text ? JSON.parse(text) : null;
 }
@@ -134,36 +213,42 @@ function goalSt(a,g){
   const r=Number(a)/Number(g);
   return r>=1?"achieved":r>=0.8?"near":"behind";
 }
-
 // ── UI primitives ──
 function Btn(p){
-  const bg=p.outline?"transparent":p.disabled?T.border:T.accentMid;
-  const col=p.disabled?T.muted:p.outline?T.mutedLight:T.text;
-  return h("button",{onClick:p.onClick,disabled:p.disabled,style:{background:bg,color:col,border:p.outline?"1px solid "+T.border:"none",borderRadius:10,padding:p.small?"7px 14px":"11px 22px",fontSize:p.small?13:14,fontWeight:600,whiteSpace:"nowrap",cursor:p.disabled?"not-allowed":"pointer"}},p.children);
+  const cls="btn "+(p.outline?"btn-o":"btn-p")+(p.small?" sm":"");
+  return h("button",{className:cls,onClick:p.onClick,disabled:p.disabled},p.children);
 }
 function Fld(p){
-  const s={width:"100%",background:T.surface,border:"1px solid "+T.border,borderRadius:10,color:T.text,padding:"10px 14px",fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",resize:p.multiline?"vertical":undefined};
-  return h("div",{style:{marginBottom:12}},
-    p.label&&h("label",{style:{fontSize:12,color:T.muted,display:"block",marginBottom:4}},p.label),
+  return h("div",{style:{marginBottom:14}},
+    p.label&&h("label",{style:{fontSize:13,fontWeight:700,color:T.text,display:"block",marginBottom:6}},p.label),
     p.multiline
-      ? h("textarea",{value:p.value,onChange:e=>p.onChange(e.target.value),placeholder:p.placeholder,rows:3,style:s})
-      : h("input",{type:p.number?"number":"text",value:p.value,onChange:e=>p.onChange(e.target.value),placeholder:p.placeholder,style:s})
+      ? h("textarea",{value:p.value,onChange:e=>p.onChange(e.target.value),placeholder:p.placeholder,rows:3})
+      : h("input",{type:p.number?"number":"text",value:p.value,onChange:e=>p.onChange(e.target.value),placeholder:p.placeholder})
   );
 }
-function Back(p){return h("button",{onClick:p.onClick,style:{background:"none",border:"none",color:T.muted,fontSize:13,padding:"0 0 20px",display:"block",cursor:"pointer"}},p.label||"← Voltar");}
-function Empty(p){return h("div",{style:{border:"1.5px dashed "+T.border,borderRadius:16,padding:48,textAlign:"center"}},h("div",{style:{fontSize:32,marginBottom:12}},p.icon),h("div",{style:{color:T.mutedLight,fontSize:14,marginBottom:20}},p.text),p.children);}
-function SecTitle(p){return h("div",{style:{display:"flex",alignItems:"center",gap:8,margin:"20px 0 10px",paddingBottom:8,borderBottom:"1px solid "+T.border}},h("span",{style:{fontSize:15}},p.icon),h("span",{style:{fontWeight:700,fontSize:13,color:T.mutedLight}},p.label));}
+function Back(p){return h("button",{onClick:p.onClick,className:"lnk",style:{display:"inline-flex",alignItems:"center",gap:6,background:"none",border:"none",color:T.muted,fontSize:13,fontWeight:600,padding:"0 0 22px",cursor:"pointer"}},h(Ic,{n:"back",size:16}),(p.label||"← Voltar").replace(/^←\s*/,""));}
+function Empty(p){return h("div",{style:{border:"1.5px dashed "+T.borderStrong,borderRadius:T.rCard,padding:"48px 24px",textAlign:"center",background:T.sunken}},h("div",{style:{display:"flex",justifyContent:"center",marginBottom:14,color:T.muted}},h(Ic,{n:p.ic||"chart",size:32})),h("div",{style:{color:T.mutedLight,fontSize:15,marginBottom:22}},p.text),p.children);}
+function SecTitle(p){return h("div",{style:{display:"flex",alignItems:"baseline",justifyContent:"space-between",gap:12,margin:"36px 0 14px"}},h("div",{className:"ov"},p.label),p.right||null);}
 function Delta(p){
   const d=pct(p.curr,p.prev); if(d===null) return null;
   const up=Number(d)>=0;
-  return h("span",{style:{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red}},(up?"▲":"▼")+" "+Math.abs(d)+"%");
+  return h("span",{style:{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:999,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red,whiteSpace:"nowrap"}},(up?"▲":"▼")+" "+pctBr(d)+"%");
+}
+// variação em frase, para os números grandes
+function DeltaLine(p){
+  const d=pct(p.curr,p.prev); if(d===null) return h("div",{style:{fontSize:13,color:T.muted}},"Sem mês anterior para comparar");
+  const up=Number(d)>=0;
+  return h("div",{style:{fontSize:13,color:T.muted,display:"flex",gap:6,flexWrap:"wrap",alignItems:"baseline"}},
+    h("span",{style:{fontWeight:700,color:up?T.green:T.red}},(up?"▲ ":"▼ ")+pctBr(d)+"%"),
+    h("span",null,"vs. "+p.prevLabel)
+  );
 }
 function Spark(p){
   if(!p.periods||p.periods.length<2) return null;
   const vals=p.periods.map(x=>Number(x[p.k])||0);
   const max=Math.max(...vals,1);
-  return h("div",{style:{display:"flex",alignItems:"flex-end",gap:3,height:28}},
-    vals.map((v,i)=>h("div",{key:i,style:{width:7,borderRadius:2,height:Math.max((v/max)*100,4)+"%",background:i===vals.length-1?T.accent:T.accentMid+"55"}}))
+  return h("div",{style:{display:"flex",alignItems:"flex-end",gap:3,height:p.tall?36:28}},
+    vals.map((v,i)=>h("div",{key:i,style:{width:p.tall?9:7,borderRadius:2,height:Math.max((v/max)*100,4)+"%",background:i===vals.length-1?T.accentMid:T.spark}}))
   );
 }
 function BigChart(p){
@@ -185,33 +270,35 @@ function BigChart(p){
   const last=vals[vals.length-1], first=vals[0];
   const changePct=first!==0?(((last-first)/Math.abs(first))*100).toFixed(1):null;
   const up=last>=first;
-  return h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:"18px 20px",flex:1,minWidth:280}},
-    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}},
+  const line=T.chart, hi=T.accentMid;
+  return h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"20px 22px",flex:1,minWidth:280}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,marginBottom:8}},
       h("div",null,
-        h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},p.icon+" "+p.label),
-        h("div",{style:{fontSize:24,fontWeight:800,color:T.text}},fmt(last))
+        h("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:T.muted,marginBottom:6}},p.ic&&h(Ic,{n:p.ic,size:16}),p.label),
+        h("div",{style:{fontFamily:T.fHead,fontSize:30,fontWeight:700,lineHeight:1,color:T.text}},fmt(last))
       ),
-      changePct!==null&&h("span",{style:{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:20,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red}},(up?"▲ ":"▼ ")+Math.abs(changePct)+"%")
+      changePct!==null&&h("span",{title:"Variação de "+pts[0].periodo+" a "+pts[pts.length-1].periodo,style:{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:999,background:up?T.greenSoft:T.redSoft,color:up?T.green:T.red,whiteSpace:"nowrap"}},(up?"▲ ":"▼ ")+pctBr(changePct)+"%")
     ),
     h("svg",{width:"100%",height:H,viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:"none",style:{overflow:"visible"}},
       h("defs",null,h("linearGradient",{id:"grad-"+p.fieldKey,x1:"0",y1:"0",x2:"0",y2:"1"},
-        h("stop",{offset:"0%",stopColor:p.color,stopOpacity:"0.25"}),
-        h("stop",{offset:"100%",stopColor:p.color,stopOpacity:"0"})
+        h("stop",{offset:"0%",stopColor:T.chartArea,stopOpacity:"0.32"}),
+        h("stop",{offset:"100%",stopColor:T.chartArea,stopOpacity:"0"})
       )),
-      [0.25,0.5,0.75].map(f=>h("line",{key:f,x1:padX,x2:W-padX,y1:padY+f*(H-padY*2),y2:padY+f*(H-padY*2),stroke:T.border,strokeWidth:"1"})),
+      [0.25,0.5,0.75].map(f=>h("line",{key:f,x1:padX,x2:W-padX,y1:padY+f*(H-padY*2),y2:padY+f*(H-padY*2),stroke:T.chartGrid,strokeWidth:"1"})),
       h("path",{d:areaPts,fill:"url(#grad-"+p.fieldKey+")"}),
-      h("polyline",{points:linePts,fill:"none",stroke:p.color,strokeWidth:"2.5",strokeLinecap:"round",strokeLinejoin:"round"}),
+      h("polyline",{points:linePts,fill:"none",stroke:line,strokeWidth:"2.5",strokeLinecap:"round",strokeLinejoin:"round"}),
       xy.map(([x,y],i)=>i===xy.length-1
         ? h(Fragment,{key:i},
-            h("circle",{cx:x,cy:y,r:10,fill:p.color,fillOpacity:"0.18"}),
-            h("circle",{cx:x,cy:y,r:5,fill:p.color,stroke:T.card,strokeWidth:"2"}),
-            h("text",{x:Math.min(Math.max(x,34),W-34),y:Math.max(y-16,14),textAnchor:x>W-50?"end":x<50?"start":"middle",fontSize:"15",fontWeight:"800",fill:p.color,fontFamily:"inherit"},fmt(vals[i]))
+            h("circle",{cx:x,cy:y,r:11,fill:hi,fillOpacity:"0.35"}),
+            h("circle",{cx:x,cy:y,r:5.5,fill:hi,stroke:line,strokeWidth:"2"}),
+            h("text",{x:Math.min(Math.max(x,34),W-34),y:Math.max(y-17,14),textAnchor:x>W-50?"end":x<50?"start":"middle",fontSize:"15",fontWeight:"700",fill:line,fontFamily:"League Spartan, sans-serif"},fmt(vals[i]))
           )
-        : h("circle",{key:i,cx:x,cy:y,r:3,fill:T.card,stroke:p.color,strokeWidth:"2",opacity:"0.55"})
+        : h("circle",{key:i,cx:x,cy:y,r:3,fill:T.card,stroke:line,strokeWidth:"2",opacity:"0.6"})
       )
     ),
-    h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:4}},
-      pts.map((x,i)=>h("span",{key:i,style:{fontSize:9,color:i===pts.length-1?p.color:T.muted,fontWeight:i===pts.length-1?700:400}},x.periodo))
+    h("div",{style:{display:"flex",justifyContent:"space-between",marginTop:6}},
+      pts.map((x,i)=>{const ponta=i===0||i===pts.length-1;const rot=ponta?x.periodo:String(x.periodo).split("/")[0];
+        return h("span",{key:i,title:x.periodo,style:{fontSize:10,color:i===pts.length-1?T.text:T.muted,fontWeight:i===pts.length-1?700:400,borderBottom:i===pts.length-1?"2px solid "+hi:"none",whiteSpace:"nowrap"}},rot);})
     )
   );
 }
@@ -219,19 +306,29 @@ function GoalBar(p){
   if(!p.goal) return null;
   const ratio=Math.min(Number(p.actual||0)/Number(p.goal),1);
   const st=goalSt(p.actual,p.goal);
-  const col=st==="achieved"?T.green:st==="near"?T.yellow:T.accent;
-  return h("div",{style:{marginTop:6}},
-    h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:10,color:T.muted,marginBottom:3}},
+  const col=st==="achieved"?T.green:st==="near"?T.yellow:T.chart;
+  return h("div",{style:{marginTop:12}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,color:T.muted,marginBottom:5}},
       h("span",null,"Meta: "+fmt(p.goal)),
-      h("span",{style:{color:col}},st==="achieved"?"✓ Atingida":st==="near"?"⚡ Quase lá":Math.round(ratio*100)+"%")
+      h("span",{style:{color:col,fontWeight:700}},st==="achieved"?"✓ Atingida":st==="near"?"Quase lá":Math.round(ratio*100)+"%")
     ),
-    h("div",{style:{height:4,borderRadius:4,background:T.border}},
-      h("div",{style:{height:"100%",width:(ratio*100)+"%",background:col,borderRadius:4,transition:"width .5s"}})
+    h("div",{style:{height:6,borderRadius:6,background:T.sunken}},
+      h("div",{style:{height:"100%",width:(ratio*100)+"%",background:col,borderRadius:6,transition:"width .2s cubic-bezier(.2,0,0,1)"}})
     )
   );
 }
+// card de número grande (nível 1)
+function Kpi(p){
+  const v=p.last[p.f.key];
+  return h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"18px 20px 16px",display:"flex",flexDirection:"column",gap:10,minWidth:0}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:T.muted}},h(Ic,{n:ICON_OF[p.f.key],size:16}),p.f.label),
+    h("div",{style:{fontFamily:T.fHead,fontSize:"clamp(30px,4vw,40px)",fontWeight:700,lineHeight:1,color:T.text,letterSpacing:"-.5px"}},fmt(v)),
+    h(DeltaLine,{curr:v,prev:p.prev&&p.prev[p.f.key],prevLabel:p.prev&&p.prev.periodo}),
+    h("div",{style:{marginTop:"auto",paddingTop:4}},h(Spark,{periods:p.periods,k:p.f.key,tall:true})),
+    h(GoalBar,{actual:v,goal:p.goals&&p.goals[p.f.key]})
+  );
+}
 
-// ── App ──
 function App(){
   const [view,setView]=useState("home");
   const [clients,setClients]=useState([]);
@@ -536,33 +633,37 @@ function App(){
     setTimeout(()=>{window.open("https://www.canva.com/design/"+CANVA_ID+"/edit","_blank");setCanvaMsg("✓ Canva aberto! Conteúdo copiado.");setCanvaLoad(false);},600);
   }
 
-  const hdr=h("div",{style:{borderBottom:"1px solid "+T.border,padding:"0 20px",position:"sticky",top:0,background:T.bg,zIndex:100}},
-    h("div",{style:{maxWidth:960,margin:"0 auto",display:"flex",alignItems:"center",gap:12,height:52}},
-      h("button",{onClick:()=>setView("home"),style:{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4}},
-        h("span",{style:{fontSize:18,fontWeight:800,color:T.accent,letterSpacing:-1}},"ig"),
-        h("span",{style:{fontSize:13,color:T.mutedLight,fontWeight:500}},"estratégia")
+  const hdr=h("div",{className:"on-dark",style:{background:T.head,color:T.headText,padding:"0 20px",position:"sticky",top:0,zIndex:100}},
+    h("div",{style:{maxWidth:1120,margin:"0 auto",display:"flex",alignItems:"center",gap:14,minHeight:60,flexWrap:"wrap",padding:"8px 0"}},
+      h("button",{onClick:()=>setView("home"),style:{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"baseline",gap:10,padding:0}},
+        h("span",{style:{fontFamily:T.fHead,fontSize:19,fontWeight:700,color:T.accentMid,letterSpacing:".5px",textTransform:"uppercase",lineHeight:1}},"HDG HUB"),
+        h("span",{style:{fontSize:12,color:T.headMuted,fontWeight:400,letterSpacing:"1.5px",textTransform:"uppercase"}},"painel")
       ),
       client&&view!=="home"&&h(Fragment,null,
-        h("span",{style:{color:T.border}},"›"),
-        h("button",{onClick:()=>setView("client"),style:{background:"none",border:"none",cursor:"pointer",color:T.mutedLight,fontSize:13}},"@"+client.name)
+        h("span",{style:{color:T.headLine}},"›"),
+        h("button",{onClick:()=>setView("client"),style:{background:"none",border:"none",cursor:"pointer",color:T.headText,fontSize:14,fontWeight:600,padding:0}},"@"+client.name)
       ),
-      view==="report"&&h(Fragment,null,h("span",{style:{color:T.border}},"›"),h("span",{style:{color:T.muted,fontSize:12}},"Relatório")),
+      view==="report"&&h(Fragment,null,h("span",{style:{color:T.headLine}},"›"),h("span",{style:{color:T.headMuted,fontSize:13}},"Relatório")),
       h("div",{style:{flex:1}}),
-      view==="client"&&!loading&&h("div",{style:{display:"flex",gap:8}},
-        h(Btn,{small:true,outline:true,onClick:()=>setView("editClient")},"✏️ Editar"),
-        h(Btn,{small:true,outline:true,onClick:()=>setView("goals")},"🎯 Metas"),
-        h(Btn,{small:true,outline:true,onClick:()=>setView("addData")},"+ Período"),
-        h(Btn,{small:true,onClick:genPdf,disabled:!periods.length},"📄 Gerar PDF")
+      view==="client"&&!loading&&h("div",{className:"hdr-actions",style:{display:"flex",gap:8,flexWrap:"wrap"}},
+        EH_ADMIN()&&h(Btn,{small:true,outline:true,onClick:()=>setView("editClient")},"Editar"),
+        EH_ADMIN()&&h(Btn,{small:true,outline:true,onClick:()=>setView("goals")},"Metas"),
+        EH_ADMIN()&&h(Btn,{small:true,outline:true,onClick:()=>setView("addData")},"+ Período"),
+        h(Btn,{small:true,onClick:genPdf,disabled:!periods.length},"Gerar PDF")
+      ),
+      window.HDG_AUTH&&h("div",{style:{display:"flex",alignItems:"center",gap:10}},
+        h("span",{className:"hdr-email",style:{fontSize:12,color:T.headMuted,maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},AUTH.email()),
+        h(Btn,{small:true,outline:true,onClick:()=>AUTH.sair()},"Sair")
       ),
       
     )
   );
 
   return h("div",{style:{background:T.bg,minHeight:"100vh",color:T.text}},
-    toast&&h("div",{style:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.green,color:"#000",padding:"10px 20px",borderRadius:12,fontWeight:600,fontSize:13,zIndex:999,whiteSpace:"nowrap"}},toast),
-    err&&h("div",{style:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.red,color:"#fff",padding:"10px 20px",borderRadius:12,fontWeight:600,fontSize:13,zIndex:999,maxWidth:"85vw",textAlign:"center"}},err),
+    toast&&h("div",{role:"status",style:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.green,color:"#F8F0E0",padding:"12px 20px",borderRadius:T.rCtl,fontWeight:600,fontSize:14,zIndex:999,whiteSpace:"nowrap"}},toast),
+    err&&h("div",{role:"alert",style:{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:T.red,color:"#FFFFFF",padding:"12px 20px",borderRadius:T.rCtl,fontWeight:600,fontSize:14,zIndex:999,maxWidth:"85vw",textAlign:"center"}},err),
     hdr,
-    h("div",{style:{maxWidth:960,margin:"0 auto",padding:"28px 20px"}},
+    h("div",{style:{maxWidth:1120,margin:"0 auto",padding:"32px 20px 64px"}},
       loading&&view!=="report"
         ? h("div",{style:{display:"flex",justifyContent:"center",paddingTop:80}},h("div",{className:"spinner"}))
         : h(Fragment,null,
@@ -579,30 +680,33 @@ function App(){
   );
 }
 
+function PageHead(p){
+  return h("div",{style:{marginBottom:28}},
+    p.over&&h("div",{className:"ov",style:{marginBottom:10}},p.over),
+    h("h1",{style:{margin:0,fontSize:"clamp(30px,5vw,42px)",lineHeight:1.05}},p.title),
+    p.sub&&h("p",{style:{color:T.muted,marginTop:8,fontSize:15}},p.sub)
+  );
+}
+
+let autoAberto=false; // cliente com uma marca só entra direto nela, uma vez por sessão
 function HomeView({clients,onSelect,onNew,onDelete}){
+  const adm=EH_ADMIN();
+  useEffect(()=>{if(!adm&&!autoAberto&&clients.length===1){autoAberto=true;onSelect(clients[0]);}},[clients.length]);
   return h("div",null,
-    h("div",{style:{marginBottom:28}},
-      h("div",{style:{fontSize:10,letterSpacing:3,color:T.accent,textTransform:"uppercase",marginBottom:8}},"Gestão de Contas"),
-      h("h1",{style:{margin:0,fontSize:26,fontWeight:800}},"Seus clientes"),
-      h("p",{style:{color:T.muted,marginTop:6,fontSize:14}},"Selecione para ver métricas, metas e relatórios.")
-    ),
+    h(PageHead,{over:adm?"Gestão de Contas":"Seu painel",title:adm?"Seus clientes":"Suas marcas",sub:"Selecione para ver métricas, metas e relatórios."}),
     clients.length===0
-      ? h(Empty,{icon:"📱",text:"Nenhum cliente ainda."},h(Btn,{onClick:onNew},"+ Adicionar cliente"))
-      : h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}},
-          ...clients.map(c=>h("div",{key:c.id,onClick:()=>onSelect(c),
-            style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,padding:18,cursor:"pointer"},
-            onMouseEnter:e=>e.currentTarget.style.borderColor=T.accentMid,
-            onMouseLeave:e=>e.currentTarget.style.borderColor=T.border},
-            h("div",{style:{display:"flex",justifyContent:"space-between"}},
-              h("div",null,h("div",{style:{fontWeight:700,fontSize:15}},"@"+c.name),c.niche&&h("div",{style:{color:T.muted,fontSize:12,marginTop:2}},c.niche)),
-              h("button",{onClick:e=>{e.stopPropagation();if(window.confirm("Remover @"+c.name+"?"))onDelete(c.id);},style:{background:"none",border:"none",color:T.muted,fontSize:18,padding:0,cursor:"pointer"}},"×")
+      ? h(Empty,{ic:"users",text:adm?"Nenhum cliente ainda.":"Nenhuma marca liberada para este acesso. Fale com a HDG HUB."},adm&&h(Btn,{onClick:onNew},"+ Adicionar cliente"))
+      : h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}},
+          ...clients.map(c=>h("div",{key:c.id,onClick:()=>onSelect(c),className:"card-link",
+            style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:20,cursor:"pointer"}},
+            h("div",{style:{display:"flex",justifyContent:"space-between",gap:8}},
+              h("div",{style:{minWidth:0}},h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:20,lineHeight:1.1,overflowWrap:"anywhere"}},"@"+c.name),c.niche&&h("div",{style:{color:T.muted,fontSize:13,marginTop:6}},c.niche)),
+              adm&&h("button",{"aria-label":"Remover @"+c.name,onClick:e=>{e.stopPropagation();if(window.confirm("Remover @"+c.name+"?"))onDelete(c.id);},style:{background:"none",border:"none",color:T.muted,padding:4,cursor:"pointer",height:28}},h(Ic,{n:"close",size:16}))
             ),
-            h("div",{style:{marginTop:14,color:T.accent,fontSize:12,fontWeight:600}},"Ver análise →")
+            h("div",{style:{marginTop:18,color:T.text,fontSize:13,fontWeight:700,textDecoration:"underline",textDecorationColor:T.accentMid,textDecorationThickness:"2px",textUnderlineOffset:"4px"}},"Ver análise →")
           )),
-          h("div",{onClick:onNew,
-            style:{border:"1.5px dashed "+T.border,borderRadius:14,padding:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:T.muted,fontSize:14},
-            onMouseEnter:e=>e.currentTarget.style.borderColor=T.accent,
-            onMouseLeave:e=>e.currentTarget.style.borderColor=T.border},
+          adm&&h("div",{onClick:onNew,className:"card-link",
+            style:{border:"1.5px dashed "+T.borderStrong,borderRadius:T.rCard,padding:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:T.mutedLight,fontSize:14,fontWeight:600,minHeight:110}},
             "+ Novo cliente"
           )
         )
@@ -615,13 +719,13 @@ function NewClientView({onCreate,onBack}){
   const [url,setUrl]=useState("");
   const [saving,setSaving]=useState(false);
   async function go(){if(!name.trim())return;setSaving(true);await onCreate(name.trim(),niche.trim(),url.trim());setSaving(false);}
-  return h("div",{style:{maxWidth:460}},
+  return h("div",{style:{maxWidth:480}},
     h(Back,{onClick:onBack}),
-    h("h2",{style:{margin:"0 0 22px",fontWeight:800}},"Novo cliente"),
+    h("h2",{style:{margin:"0 0 24px",fontSize:32}},"Novo cliente"),
     h(Fld,{label:"Nome do perfil (sem @)",value:name,onChange:setName,placeholder:"ex: loja_doce_mania"}),
     h(Fld,{label:"Nicho / Segmento",value:niche,onChange:setNiche,placeholder:"ex: Confeitaria artesanal"}),
     h(Fld,{label:"Link do Instagram",value:url,onChange:setUrl,placeholder:"ex: https://instagram.com/loja_doce_mania"}),
-    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+    h("div",{style:{marginTop:22,display:"flex",gap:10,flexWrap:"wrap"}},
       h(Btn,{onClick:go,disabled:!name.trim()||saving},saving?"Criando...":"Criar cliente"),
       h(Btn,{outline:true,onClick:onBack},"Cancelar")
     )
@@ -634,16 +738,33 @@ function EditClientView({client,onSave,onBack}){
   const [url,setUrl]=useState(client.instagram_url||"");
   const [saving,setSaving]=useState(false);
   async function go(){if(!name.trim())return;setSaving(true);await onSave(client.id,{name:name.trim(),niche:niche.trim(),instagram_url:url.trim()||null});setSaving(false);}
-  return h("div",{style:{maxWidth:460}},
+  return h("div",{style:{maxWidth:480}},
     h(Back,{onClick:onBack}),
-    h("h2",{style:{margin:"0 0 22px",fontWeight:800}},"Editar cliente"),
+    h("h2",{style:{margin:"0 0 24px",fontSize:32}},"Editar cliente"),
     h(Fld,{label:"Nome do perfil (sem @)",value:name,onChange:setName,placeholder:"ex: loja_doce_mania"}),
     h(Fld,{label:"Nicho / Segmento",value:niche,onChange:setNiche,placeholder:"ex: Confeitaria artesanal"}),
     h(Fld,{label:"Link do Instagram",value:url,onChange:setUrl,placeholder:"ex: https://instagram.com/loja_doce_mania"}),
-    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+    h("div",{style:{marginTop:22,display:"flex",gap:10,flexWrap:"wrap"}},
       h(Btn,{onClick:go,disabled:!name.trim()||saving},saving?"Salvando...":"Salvar alterações"),
       h(Btn,{outline:true,onClick:onBack},"Cancelar")
     )
+  );
+}
+
+function MetricCard({f,last,prev,periods,goals}){
+  const isRawDelta=["seguidores_liquidos"].includes(f.key);
+  const val=Number(last[f.key]);
+  const valColor=isRawDelta?(val>0?T.green:val<0?T.red:undefined):undefined;
+  return h("div",{style:{background:T.card,border:"1px solid "+(isRawDelta&&val<0?T.red:T.border),borderRadius:T.rCard,padding:"16px 18px",minWidth:0}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:T.muted,marginBottom:10}},ICON_OF[f.key]&&h(Ic,{n:ICON_OF[f.key],size:16}),f.label),
+    h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:26,lineHeight:1,marginBottom:10,color:valColor||T.text}},fmt(last[f.key])),
+    h("div",{style:{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8}},
+      isRawDelta
+        ? h("span",{style:{fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:999,background:val>0?T.greenSoft:val<0?T.redSoft:T.sunken,color:val>0?T.green:val<0?T.red:T.muted}},(val>0?"▲ ganho":val<0?"▼ perda":"= neutro"))
+        : h(Delta,{curr:last[f.key],prev:prev&&prev[f.key]}),
+      h(Spark,{periods,k:f.key})
+    ),
+    h(GoalBar,{actual:last[f.key],goal:goals&&goals[f.key]})
   );
 }
 
@@ -651,110 +772,95 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
   const last=periods[periods.length-1];
   const prev=periods.length>1?periods[periods.length-2]:null;
   const tabs=[["overview","Visão Geral"],["historico","Histórico"],["metas","Metas"]];
+  const head=h(PageHead,{over:"Cliente",title:"@"+client.name,sub:client.niche||null});
 
   if(!periods.length) return h("div",null,
-    h("div",{style:{marginBottom:22}},
-      h("div",{style:{fontSize:10,color:T.accent,letterSpacing:3,textTransform:"uppercase",marginBottom:4}},"Cliente"),
-      h("h2",{style:{margin:0,fontWeight:800,fontSize:22}},"@"+client.name),
-      client.niche&&h("div",{style:{color:T.muted,fontSize:13}},client.niche)
-    ),
-    h(Empty,{icon:"📊",text:"Nenhum período registrado ainda."},h(Btn,{onClick:onAddData},"+ Adicionar primeiro período"))
+    head,
+    h(Empty,{ic:"chart",text:"Nenhum período registrado ainda."},EH_ADMIN()&&h(Btn,{onClick:onAddData},"+ Adicionar primeiro período"))
   );
 
+  const has=k=>last[k]!=null&&last[k]!=="";
+  const kpis=KPI_KEYS.map(k=>ALL_FIELDS.find(f=>f.key===k)).filter(f=>f&&has(f.key));
+  const grid=min=>({display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax("+min+"px,1fr))",gap:14});
+
   return h("div",null,
-    h("div",{style:{marginBottom:22}},
-      h("div",{style:{fontSize:10,color:T.accent,letterSpacing:3,textTransform:"uppercase",marginBottom:4}},"Cliente"),
-      h("h2",{style:{margin:0,fontWeight:800,fontSize:22}},"@"+client.name),
-      client.niche&&h("div",{style:{color:T.muted,fontSize:13}},client.niche)
-    ),
-    h("div",{style:{display:"flex",borderBottom:"1px solid "+T.border,marginBottom:22}},
-      tabs.map(([k,l])=>h("button",{key:k,onClick:()=>setTab(k),style:{background:"none",border:"none",cursor:"pointer",padding:"10px 16px",fontSize:13,fontWeight:600,color:tab===k?T.accent:T.muted,borderBottom:"2px solid "+(tab===k?T.accent:"transparent"),marginBottom:-1}},l))
+    head,
+    h("div",{role:"tablist",style:{display:"flex",gap:4,borderBottom:"1px solid "+T.border,marginBottom:24,overflowX:"auto"}},
+      tabs.map(([k,l])=>h("button",{key:k,role:"tab","aria-selected":tab===k,onClick:()=>setTab(k),style:{background:"none",border:"none",cursor:"pointer",padding:"12px 16px",fontSize:14,fontWeight:700,color:tab===k?T.text:T.muted,borderBottom:"3px solid "+(tab===k?T.accentMid:"transparent"),marginBottom:-1,whiteSpace:"nowrap"}},l))
     ),
     tab==="overview"&&h("div",null,
-      h("div",{style:{fontSize:12,color:T.muted,marginBottom:16}},"Último período: ",h("strong",{style:{color:T.mutedLight}},last.periodo),prev&&h(Fragment,null," · vs ",h("strong",{style:{color:T.mutedLight}},prev.periodo))),
-      periods.length>=2&&h("div",{style:{display:"flex",gap:14,marginBottom:24,flexWrap:"wrap"}},
-        h(BigChart,{periods,fieldKey:"seguidores",label:"Seguidores",icon:"👥",color:T.accent}),
-        h(BigChart,{periods,fieldKey:"alcance",label:"Contas Alcançadas",icon:"📡",color:T.green}),
-        h(BigChart,{periods,fieldKey:"impressoes",label:"Visualizações Totais",icon:"👁",color:"#4D9FFF"})
+      h("div",{style:{fontSize:13,color:T.muted,marginBottom:18}},"Último período: ",h("strong",{style:{color:T.text}},last.periodo),prev&&h(Fragment,null," · vs ",h("strong",{style:{color:T.text}},prev.periodo))),
+      // nível 1 · números grandes
+      kpis.length>0&&h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14,marginBottom:16}},
+        kpis.map(f=>h(Kpi,{key:f.key,f,last,prev,periods,goals}))
       ),
+      // nível 2 · gráficos grandes
+      periods.length>=2&&h("div",{style:{display:"flex",gap:16,flexWrap:"wrap"}},
+        h(BigChart,{periods,fieldKey:"seguidores",label:"Seguidores",ic:"users"}),
+        h(BigChart,{periods,fieldKey:"alcance",label:"Contas Alcançadas",ic:"target"}),
+        h(BigChart,{periods,fieldKey:"impressoes",label:"Visualizações Totais",ic:"eye"})
+      ),
+      // nível 3 · demais dados
       GROUPS.map(g=>{
-        const has=g.fields.some(f=>last[f.key]!=null&&last[f.key]!=="");
-        if(!has) return null;
+        const fields=g.fields.filter(f=>has(f.key)&&!(g.id==="geral"&&KPI_KEYS.includes(f.key)));
+        if(!fields.length) return null;
         return h("div",{key:g.id},
-          h(SecTitle,{icon:g.icon,label:g.label}),
-          h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10,marginBottom:8}},
-            g.fields.filter(f=>last[f.key]!=null&&last[f.key]!=="").map(f=>{
-              const isRawDelta=["seguidores_liquidos"].includes(f.key);
-              const val=Number(last[f.key]);
-              const valColor=isRawDelta?(val>0?"#4A7C59":val<0?"#8B3A3A":undefined):undefined;
-              return h("div",{key:f.key,style:{background:T.card,border:"1px solid "+(isRawDelta&&val<0?"rgba(139,58,58,0.3)":T.border),borderRadius:12,padding:14}},
-                h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},f.icon+" "+f.label),
-                h("div",{style:{fontWeight:800,fontSize:20,marginBottom:4,color:valColor||T.text}},fmt(last[f.key])),
-                h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between"}},
-                  isRawDelta
-                    ? h("span",{style:{fontSize:11,fontWeight:700,padding:"2px 7px",borderRadius:20,background:val>0?"rgba(74,124,89,0.1)":val<0?"rgba(139,58,58,0.1)":"transparent",color:val>0?"#4A7C59":val<0?"#8B3A3A":T.muted}},(val>0?"▲ ganho":val<0?"▼ perda":"= neutro"))
-                    : h(Delta,{curr:last[f.key],prev:prev&&prev[f.key]}),
-                  h(Spark,{periods,k:f.key})
-                ),
-                h(GoalBar,{actual:last[f.key],goal:goals&&goals[f.key]})
-              );
-            }
-            )
-          )
+          h(SecTitle,{label:g.label}),
+          h("div",{style:grid(180)},fields.map(f=>h(MetricCard,{key:f.key,f,last,prev,periods,goals})))
         );
       }),
-      PUBLICO_FIELDS.some(f=>last[f.key]!=null&&last[f.key]!=="")&&h("div",null,
-        h(SecTitle,{icon:"👥",label:"Público"}),
-        h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}},
-          last.publico_genero_masc!=null&&last.publico_genero_fem!=null&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14,gridColumn:"span 2"}},
-            h("div",{style:{fontSize:11,color:T.muted,marginBottom:10}},"👫 Gênero"),
-            h("div",{style:{display:"flex",gap:16}},
-              h("div",null,h("div",{style:{fontWeight:800,fontSize:20}},last.publico_genero_masc+"%"),h("div",{style:{fontSize:11,color:T.muted}},"Masculino")),
-              h("div",null,h("div",{style:{fontWeight:800,fontSize:20}},last.publico_genero_fem+"%"),h("div",{style:{fontSize:11,color:T.muted}},"Feminino"))
+      PUBLICO_FIELDS.some(f=>has(f.key))&&h("div",null,
+        h(SecTitle,{label:"Público"}),
+        h("div",{style:grid(200)},
+          last.publico_genero_masc!=null&&last.publico_genero_fem!=null&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"16px 18px",gridColumn:"span 2"},className:"span2"},
+            h("div",{style:{fontSize:13,fontWeight:600,color:T.muted,marginBottom:12}},"Gênero"),
+            h("div",{style:{display:"flex",gap:24}},
+              h("div",null,h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:26,lineHeight:1}},last.publico_genero_masc+"%"),h("div",{style:{fontSize:12,color:T.muted,marginTop:4,display:"flex",alignItems:"center",gap:6}},h("span",{style:{width:10,height:10,borderRadius:2,background:T.chart,display:"inline-block"}}),"Masculino")),
+              h("div",null,h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:26,lineHeight:1}},last.publico_genero_fem+"%"),h("div",{style:{fontSize:12,color:T.muted,marginTop:4,display:"flex",alignItems:"center",gap:6}},h("span",{style:{width:10,height:10,borderRadius:2,background:T.accentMid,display:"inline-block"}}),"Feminino"))
             ),
-            h("div",{style:{marginTop:10,height:8,borderRadius:4,background:T.border,overflow:"hidden",display:"flex"}},
-              h("div",{style:{width:last.publico_genero_masc+"%",background:"#4D9FFF",borderRadius:"4px 0 0 4px"}}),
-              h("div",{style:{width:last.publico_genero_fem+"%",background:T.accent,borderRadius:"0 4px 4px 0"}})
+            h("div",{style:{marginTop:14,height:10,borderRadius:6,background:T.sunken,overflow:"hidden",display:"flex"}},
+              h("div",{style:{width:last.publico_genero_masc+"%",background:T.chart}}),
+              h("div",{style:{width:last.publico_genero_fem+"%",background:T.accentMid}})
             )
           ),
-          last.publico_faixa_dominante&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}},
-            h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},"📊 Faixa Etária Dominante"),
-            h("div",{style:{fontWeight:800,fontSize:20}},last.publico_faixa_dominante)
+          last.publico_faixa_dominante&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"16px 18px"}},
+            h("div",{style:{fontSize:13,fontWeight:600,color:T.muted,marginBottom:10}},"Faixa Etária Dominante"),
+            h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:26,lineHeight:1}},last.publico_faixa_dominante)
           ),
           [1,2,3].filter(n=>last["publico_cidade_"+n]).map(n=>
-            h("div",{key:n,style:{background:T.card,border:"1px solid "+T.border,borderRadius:12,padding:14}},
-              h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},"🏙️ Cidade #"+n),
-              h("div",{style:{fontWeight:800,fontSize:18}},last["publico_cidade_"+n]),
-              last["publico_cidade_"+n+"_pct"]&&h("div",{style:{fontSize:12,color:T.muted,marginTop:2}},last["publico_cidade_"+n+"_pct"]+"%")
+            h("div",{key:n,style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"16px 18px"}},
+              h("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:T.muted,marginBottom:10}},h(Ic,{n:"pin",size:16}),"Cidade #"+n),
+              h("div",{style:{fontFamily:T.fHead,fontWeight:700,fontSize:22,lineHeight:1.1}},last["publico_cidade_"+n]),
+              last["publico_cidade_"+n+"_pct"]&&h("div",{style:{fontSize:13,color:T.muted,marginTop:6}},last["publico_cidade_"+n+"_pct"]+"%")
             )
           )
         )
       )
     ),
-    tab==="historico"&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:14,overflow:"hidden"}},
+    tab==="historico"&&h("div",{style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,overflow:"hidden"}},
       h("div",{style:{overflowX:"auto"}},
-        h("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:12}},
-          h("thead",null,h("tr",{style:{borderBottom:"1px solid "+T.border}},
-            h("th",{style:{padding:"10px 16px",textAlign:"left",color:T.muted,fontWeight:600,whiteSpace:"nowrap"}},"Período"),
+        h("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13}},
+          h("thead",null,h("tr",{style:{background:T.sunken,borderBottom:"1px solid "+T.border}},
+            h("th",{className:"th",style:{padding:"12px 16px",textAlign:"left",position:"sticky",left:0,background:T.sunken}},"Período"),
             ALL_FIELDS.filter(f=>periods.some(p=>p[f.key]!=null&&p[f.key]!=="")).map(f=>
-              h("th",{key:f.key,style:{padding:"8px 10px",textAlign:"right",color:T.muted,fontWeight:600,whiteSpace:"nowrap"}},f.label)
+              h("th",{key:f.key,className:"th",style:{padding:"12px 12px",textAlign:"right"}},f.label)
             ),
-            h("th",null)
+            EH_ADMIN()&&h("th",{style:{background:T.sunken}})
           )),
           h("tbody",null,
             [...periods].reverse().map((p,ri)=>{
               const i=periods.length-1-ri;const pv=i>0?periods[i-1]:null;
-              return h("tr",{key:p.id,style:{borderBottom:"1px solid "+T.border+"22"}},
-                h("td",{style:{padding:"10px 16px",fontWeight:600,whiteSpace:"nowrap"}},p.periodo),
+              return h("tr",{key:p.id,className:"tr",style:{borderBottom:"1px solid "+T.border}},
+                h("td",{style:{padding:"12px 16px",fontWeight:700,whiteSpace:"nowrap",position:"sticky",left:0,background:T.card}},p.periodo),
                 ALL_FIELDS.filter(f=>periods.some(x=>x[f.key]!=null&&x[f.key]!=="")).map(f=>
-                  h("td",{key:f.key,style:{padding:"8px 10px",textAlign:"right",whiteSpace:"nowrap"}},
-                    h("span",{style:{color:T.mutedLight}},fmt(p[f.key])),
-                    pv&&p[f.key]&&h(Delta,{curr:p[f.key],prev:pv[f.key]})
+                  h("td",{key:f.key,style:{padding:"10px 12px",textAlign:"right",whiteSpace:"nowrap"}},
+                    h("div",{style:{color:T.text,fontWeight:600}},fmt(p[f.key])),
+                    pv&&p[f.key]&&h("div",{style:{marginTop:4}},h(Delta,{curr:p[f.key],prev:pv[f.key]}))
                   )
                 ),
-                h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap"}},
-                  h("button",{onClick:()=>onOpenEdit(p),style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:13,marginRight:8,padding:"2px 6px",borderRadius:4,border:"1px solid "+T.border}},"✏️ editar"),
-                  h("button",{onClick:()=>{if(window.confirm("Remover período "+p.periodo+"?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:16}},"×")
+                EH_ADMIN()&&h("td",{style:{padding:"8px 12px",whiteSpace:"nowrap"}},
+                  h("button",{onClick:()=>onOpenEdit(p),className:"btn btn-o sm",style:{marginRight:6}},h(Ic,{n:"pencil",size:16}),"editar"),
+                  h("button",{"aria-label":"Remover período "+p.periodo,onClick:()=>{if(window.confirm("Remover período "+p.periodo+"?"))onDeletePeriod(p.id);},style:{background:"none",border:"none",cursor:"pointer",color:T.muted,padding:6,verticalAlign:"middle"}},h(Ic,{n:"close",size:16}))
                 )
               );
             })
@@ -764,30 +870,30 @@ function ClientView({client,periods,goals,tab,setTab,onDeletePeriod,onEditPeriod
     ),
     tab==="metas"&&(
       !goals||!Object.keys(goals).some(k=>!["id","client_id","updated_at"].includes(k)&&goals[k])
-        ? h(Empty,{icon:"🎯",text:"Nenhuma meta definida ainda."},h(Btn,{onClick:onGoals},"Definir metas"))
+        ? h(Empty,{ic:"target",text:"Nenhuma meta definida ainda."},EH_ADMIN()&&h(Btn,{onClick:onGoals},"Definir metas"))
         : h("div",null,
-            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}},
-              h("div",{style:{fontSize:13,color:T.muted}},"Metas vs. "+last.periodo),
-              h(Btn,{small:true,outline:true,onClick:onGoals},"Editar metas")
+            h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}},
+              h("div",{style:{fontSize:13,color:T.muted}},"Metas vs. ",h("strong",{style:{color:T.text}},last.periodo)),
+              EH_ADMIN()&&h(Btn,{small:true,outline:true,onClick:onGoals},"Editar metas")
             ),
             GROUPS.map(g=>{
-              const has=g.fields.some(f=>goals&&goals[f.key]);
-              if(!has) return null;
+              const hasG=g.fields.some(f=>goals&&goals[f.key]);
+              if(!hasG) return null;
               return h("div",{key:g.id},
-                h(SecTitle,{icon:g.icon,label:g.label}),
-                h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))",gap:10,marginBottom:8}},
+                h(SecTitle,{label:g.label}),
+                h("div",{style:grid(200)},
                   g.fields.filter(f=>goals&&goals[f.key]).map(f=>{
                     const act=last&&last[f.key];const st=goalSt(act,goals[f.key]);
-                    const col=st==="achieved"?T.green:st==="near"?T.yellow:T.accent;
+                    const col=st==="achieved"?T.green:st==="near"?T.yellow:T.chart;
                     const ratio=act&&goals[f.key]?Math.min(Number(act)/Number(goals[f.key]),1):0;
-                    return h("div",{key:f.key,style:{background:T.card,border:"1px solid "+(st==="achieved"?T.green+"55":T.border),borderRadius:12,padding:14}},
-                      h("div",{style:{fontSize:11,color:T.muted,marginBottom:8}},f.icon+" "+f.label),
-                      h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:8}},
-                        h("div",null,h("div",{style:{fontSize:18,fontWeight:800}},fmt(act)),h("div",{style:{fontSize:10,color:T.muted}},"realizado")),
-                        h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:15,fontWeight:700,color:T.muted}},fmt(goals[f.key])),h("div",{style:{fontSize:10,color:T.muted}},"meta"))
+                    return h("div",{key:f.key,style:{background:T.card,border:"1px solid "+(st==="achieved"?T.green:T.border),borderRadius:T.rCard,padding:"16px 18px"}},
+                      h("div",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:600,color:T.muted,marginBottom:12}},ICON_OF[f.key]&&h(Ic,{n:ICON_OF[f.key],size:16}),f.label),
+                      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:10}},
+                        h("div",null,h("div",{style:{fontFamily:T.fHead,fontSize:26,fontWeight:700,lineHeight:1}},fmt(act)),h("div",{style:{fontSize:11,color:T.muted,marginTop:4}},"realizado")),
+                        h("div",{style:{textAlign:"right"}},h("div",{style:{fontFamily:T.fHead,fontSize:18,fontWeight:700,lineHeight:1,color:T.muted}},fmt(goals[f.key])),h("div",{style:{fontSize:11,color:T.muted,marginTop:4}},"meta"))
                       ),
-                      h("div",{style:{height:4,borderRadius:4,background:T.border,marginBottom:6}},h("div",{style:{height:"100%",width:(ratio*100)+"%",background:col,borderRadius:4}})),
-                      h("div",{style:{fontSize:11,color:col,fontWeight:600}},st==="achieved"?"✓ Meta atingida!":st==="near"?"⚡ Quase lá":Math.round(ratio*100)+"% da meta")
+                      h("div",{style:{height:6,borderRadius:6,background:T.sunken,marginBottom:8}},h("div",{style:{height:"100%",width:(ratio*100)+"%",background:col,borderRadius:6}})),
+                      h("div",{style:{fontSize:12,color:col,fontWeight:700}},st==="achieved"?"✓ Meta atingida!":st==="near"?"Quase lá":Math.round(ratio*100)+"% da meta")
                     );
                   })
                 )
@@ -807,21 +913,21 @@ function GoalsView({client,goals,periods,onSave,onBack}){
     const clean={};ALL_FIELDS.forEach(f=>{if(local[f.key]!==""&&local[f.key]!==null)clean[f.key]=local[f.key];});
     await onSave(clean);setSaving(false);
   }
-  return h("div",{style:{maxWidth:700}},
+  return h("div",{style:{maxWidth:720}},
     h(Back,{onClick:onBack}),
-    h("h2",{style:{margin:"0 0 6px",fontWeight:800}},"🎯 Metas — @"+client.name),
-    h("p",{style:{color:T.muted,fontSize:14,marginBottom:8}},"Defina as metas para acompanhar a evolução mês a mês."),
+    h("h2",{style:{margin:"0 0 8px",fontSize:32}},"Metas — @"+client.name),
+    h("p",{style:{color:T.muted,fontSize:15,marginBottom:8}},"Defina as metas para acompanhar a evolução mês a mês."),
     GROUPS.map(g=>h("div",{key:g.id},
-      h(SecTitle,{icon:g.icon,label:g.label}),
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
-        g.fields.map(f=>h("div",{key:f.key,style:{background:T.card,border:"1px solid "+T.border,borderRadius:10,padding:12}},
-          h("div",{style:{fontSize:11,color:T.muted,marginBottom:4}},f.icon+" "+f.label),
-          last&&last[f.key]!=null&&last[f.key]!==""&&h("div",{style:{fontSize:11,color:T.mutedLight,marginBottom:6}},"Atual: "+fmt(last[f.key])),
-          h("input",{type:"number",value:local[f.key]||"",onChange:e=>setLocal(g=>Object.assign({},g,{[f.key]:e.target.value})),placeholder:"Definir meta",style:{width:"100%",background:T.surface,border:"1px solid "+T.border,borderRadius:8,color:T.text,padding:"8px 10px",fontSize:13,boxSizing:"border-box",outline:"none",fontFamily:"inherit"}})
+      h(SecTitle,{label:g.label}),
+      h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+        g.fields.map(f=>h("div",{key:f.key,style:{background:T.card,border:"1px solid "+T.border,borderRadius:T.rCard,padding:"14px 16px"}},
+          h("label",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,fontWeight:700,color:T.text,marginBottom:6}},ICON_OF[f.key]&&h(Ic,{n:ICON_OF[f.key],size:16}),f.label),
+          last&&last[f.key]!=null&&last[f.key]!==""&&h("div",{style:{fontSize:12,color:T.muted,marginBottom:8}},"Atual: "+fmt(last[f.key])),
+          h("input",{type:"number",value:local[f.key]||"",onChange:e=>setLocal(g=>Object.assign({},g,{[f.key]:e.target.value})),placeholder:"Definir meta"})
         ))
       )
     )),
-    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+    h("div",{style:{marginTop:24,display:"flex",gap:10,flexWrap:"wrap"}},
       h(Btn,{onClick:go,disabled:saving},saving?"Salvando...":"Salvar metas"),
       h(Btn,{outline:true,onClick:onBack},"Cancelar")
     )
@@ -861,44 +967,42 @@ function AddDataView({client,onAdd,onBack}){
     setSaving(false);
   }
 
-  if(mode==="choice") return h("div",{style:{maxWidth:480}},
+  if(mode==="choice") return h("div",{style:{maxWidth:520}},
     h(Back,{onClick:onBack}),
-    h("h2",{style:{margin:"0 0 6px",fontWeight:800}},"Novo período"),
-    h("p",{style:{color:T.muted,fontSize:14,marginBottom:24}},"@"+client.name+" — como inserir os dados?"),
+    h("h2",{style:{margin:"0 0 8px",fontSize:32}},"Novo período"),
+    h("p",{style:{color:T.muted,fontSize:15,marginBottom:24}},"@"+client.name+" — como inserir os dados?"),
     h("div",{style:{display:"grid",gap:12}},
       [
-        {icon:"📋",title:"Importar JSON do Claude",desc:"Mande prints ao Claude aqui nesta conversa, receba o JSON e importe com 1 clique",m:"json",rec:true},
-        {icon:"⌨️",title:"Inserir manualmente",desc:"Digite os números organizados por tipo de conteúdo",m:"manual",rec:false}
-      ].map(o=>h("div",{key:o.m,
+        {ic:"upload",title:"Importar JSON do Claude",desc:"Mande prints ao Claude aqui nesta conversa, receba o JSON e importe com 1 clique",m:"json",rec:true},
+        {ic:"keyboard",title:"Inserir manualmente",desc:"Digite os números organizados por tipo de conteúdo",m:"manual",rec:false}
+      ].map(o=>h("div",{key:o.m,className:"card-link",
         onClick:()=>o.m==="json"?jsonRef.current.click():setMode(o.m),
-        style:{background:T.card,border:"1.5px solid "+(o.rec?T.accentMid:T.border),borderRadius:14,padding:18,cursor:"pointer",position:"relative"},
-        onMouseEnter:e=>e.currentTarget.style.borderColor=T.accent,
-        onMouseLeave:e=>e.currentTarget.style.borderColor=o.rec?T.accentMid:T.border},
-        o.rec&&h("div",{style:{position:"absolute",top:12,right:12,fontSize:11,color:T.accent,background:T.accentSoft,padding:"2px 8px",borderRadius:20,fontWeight:700}},"Recomendado"),
-        h("div",{style:{fontSize:22,marginBottom:6}},o.icon),
-        h("div",{style:{fontWeight:700,fontSize:14,marginBottom:3}},o.title),
-        h("div",{style:{color:T.muted,fontSize:13}},o.desc)
+        style:{background:T.card,border:(o.rec?"2px solid "+T.chart:"1px solid "+T.border),borderRadius:T.rCard,padding:20,cursor:"pointer",position:"relative"}},
+        o.rec&&h("div",{style:{position:"absolute",top:14,right:14,fontSize:11,color:T.onAction,background:T.accentMid,padding:"3px 10px",borderRadius:999,fontWeight:700}},"Recomendado"),
+        h("div",{style:{marginBottom:10,color:T.text}},h(Ic,{n:o.ic,size:24})),
+        h("div",{style:{fontWeight:700,fontSize:15,marginBottom:4}},o.title),
+        h("div",{style:{color:T.muted,fontSize:14}},o.desc)
       ))
     ),
     h("input",{ref:jsonRef,type:"file",accept:".json",style:{display:"none"},onChange:onJson})
   );
 
-  return h("div",{style:{maxWidth:700}},
+  return h("div",{style:{maxWidth:720}},
     h(Back,{onClick:()=>setMode("choice")}),
-    h("h2",{style:{margin:"0 0 20px",fontWeight:800}},"Inserir dados — @"+client.name),
+    h("h2",{style:{margin:"0 0 22px",fontSize:32}},"Inserir dados — @"+client.name),
     h(Fld,{label:"Período *",value:periodo,onChange:setPeriodo,placeholder:"ex: Abr/2025"}),
     GROUPS.map(g=>h("div",{key:g.id},
-      h(SecTitle,{icon:g.icon,label:g.label}),
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
-        g.fields.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:true}))
+      h(SecTitle,{label:g.label}),
+      h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+        g.fields.map(f=>h(Fld,{key:f.key,label:f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:true}))
       )
     )),
-    h(SecTitle,{icon:"👥",label:"Público"}),
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
-      PUBLICO_FIELDS.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:f.type==="number"}))
+    h(SecTitle,{label:"Público"}),
+    h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+      PUBLICO_FIELDS.map(f=>h(Fld,{key:f.key,label:f.label,value:metrics[f.key]||"",onChange:v=>setM(f.key,v),placeholder:"–",number:f.type==="number"}))
     ),
     h(Fld,{label:"Observações do período",value:obs,onChange:setObs,placeholder:"Campanha, feriado, lançamento...",multiline:true}),
-    h("div",{style:{marginTop:18,display:"flex",gap:10}},
+    h("div",{style:{marginTop:20,display:"flex",gap:10,flexWrap:"wrap"}},
       h(Btn,{onClick:save,disabled:!periodo.trim()||saving},saving?"Salvando...":"Salvar período"),
       h(Btn,{outline:true,onClick:()=>setMode("choice")},"Voltar")
     )
@@ -1027,26 +1131,152 @@ function EditPeriodView({period,onSave,onBack}){
     await onSave(clean);
     setSaving(false);
   }
-  return h("div",{style:{maxWidth:700}},
+  return h("div",{style:{maxWidth:720}},
     h(Back,{onClick:onBack}),
-    h("h2",{style:{margin:"0 0 4px",fontWeight:800}},"✏️ Editar período"),
-    h("p",{style:{color:T.muted,fontSize:13,marginBottom:20}},"Edite os dados do período e salve."),
+    h("h2",{style:{margin:"0 0 6px",fontSize:32}},"Editar período"),
+    h("p",{style:{color:T.muted,fontSize:15,marginBottom:22}},"Edite os dados do período e salve."),
     h(Fld,{label:"Período *",value:data.periodo,onChange:v=>setF("periodo",v),placeholder:"ex: Abr/2025"}),
     GROUPS.map(g=>h("div",{key:g.id},
-      h(SecTitle,{icon:g.icon,label:g.label}),
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:8}},
-        g.fields.map(f=>h(Fld,{key:f.key,label:f.icon+" "+f.label,value:data[f.key]||"",onChange:v=>setF(f.key,v),placeholder:"–",number:true}))
+      h(SecTitle,{label:g.label}),
+      h("div",{className:"g2",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+        g.fields.map(f=>h(Fld,{key:f.key,label:f.label,value:data[f.key]||"",onChange:v=>setF(f.key,v),placeholder:"–",number:true}))
       )
     )),
     h(Fld,{label:"Observações",value:data.observacoes,onChange:v=>setF("observacoes",v),placeholder:"Contexto do período...",multiline:true}),
-    h("div",{style:{marginTop:20,display:"flex",gap:10}},
+    h("div",{style:{marginTop:22,display:"flex",gap:10,flexWrap:"wrap"}},
       h(Btn,{onClick:go,disabled:!data.periodo.trim()||saving},saving?"Salvando...":"Salvar alterações"),
       h(Btn,{outline:true,onClick:onBack},"Cancelar")
     )
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+// ===== Acesso: login por link no e-mail (Supabase Auth, sem biblioteca) =====
+// A sessão fica no navegador. O banco só entrega dados a quem fez login e tem linha na tabela "acessos".
+window.HDG_AUTH = true;
+const AUTH_KEY = "hdg-painel-sessao";
+const AUTH = {
+  s: null, erro: "", _refresh: null,
+  load(){ try{ this.s = JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); }catch(e){ this.s = null; } },
+  save(s){ this.s = s; try{ s ? localStorage.setItem(AUTH_KEY, JSON.stringify(s)) : localStorage.removeItem(AUTH_KEY); }catch(e){} },
+  limparUrl(){ history.replaceState(null, "", location.pathname + location.search); },
+  // O link do e-mail volta com a sessão (ou o erro) depois do "#".
+  fromHash(){
+    if(!location.hash) return;
+    const q = new URLSearchParams(location.hash.slice(1));
+    if(q.get("error_description")){
+      this.erro = q.get("error_code") === "otp_expired"
+        ? "Esse link já foi usado ou expirou. Peça um novo abaixo."
+        : "Não consegui entrar com esse link. Peça um novo abaixo.";
+      this.limparUrl(); return;
+    }
+    const at = q.get("access_token"), rt = q.get("refresh_token");
+    if(at && rt){
+      this.save({ at, rt, exp: Number(q.get("expires_at")) || Math.floor(Date.now()/1000) + Number(q.get("expires_in") || 3600) });
+      this.limparUrl();
+    }
+  },
+  email(){
+    try{ return JSON.parse(atob(this.s.at.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).email || ""; }catch(e){ return ""; }
+  },
+  refresh(){
+    if(this._refresh) return this._refresh;
+    this._refresh = (async () => {
+      try{
+        const r = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", { method: "POST",
+          headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: this.s.rt }) });
+        if(!r.ok){ this.save(null); return null; }
+        const d = await r.json();
+        this.save({ at: d.access_token, rt: d.refresh_token, exp: d.expires_at || Math.floor(Date.now()/1000) + d.expires_in });
+        return this.s.at;
+      } finally { this._refresh = null; }
+    })();
+    return this._refresh;
+  },
+  async token(){
+    if(!this.s) return null;
+    if(this.s.exp - 60 < Date.now()/1000) return await this.refresh();
+    return this.s.at;
+  },
+  // create_user:false — só entra quem já foi convidado no Supabase.
+  async pedirLink(email){
+    const r = await fetch(SUPABASE_URL + "/auth/v1/otp?redirect_to=" + encodeURIComponent(location.origin + location.pathname), { method: "POST",
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email, create_user: false }) });
+    if(r.status === 429) throw new Error("Muitos pedidos seguidos. Espere alguns minutos e tente de novo.");
+    if(!r.ok && r.status >= 500) throw new Error("O serviço de login não respondeu. Tente de novo em alguns minutos.");
+    // E-mail sem convite também cai aqui: a resposta é a mesma, para não revelar quem tem acesso.
+  },
+  async sair(){
+    try{ const t = await this.token(); if(t) await fetch(SUPABASE_URL + "/auth/v1/logout", { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + t } }); }catch(e){}
+    this.save(null); location.reload();
+  }
+};
+
+function TelaAcesso({ children }){
+  return h("div", { style: { background: T.bg, minHeight: "100vh", color: T.text } },
+    h("div", { className: "on-dark", style: { background: T.head, padding: "0 20px" } },
+      h("div", { style: { maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "baseline", gap: 10, minHeight: 60, paddingTop: 20 } },
+        h("span", { style: { fontFamily: T.fHead, fontSize: 19, fontWeight: 700, color: T.accentMid, letterSpacing: ".5px", textTransform: "uppercase", lineHeight: 1 } }, "HDG HUB"),
+        h("span", { style: { fontSize: 12, color: T.headMuted, letterSpacing: "1.5px", textTransform: "uppercase" } }, "painel"))),
+    h("div", { style: { maxWidth: 440, margin: "0 auto", padding: "56px 20px" } },
+      h("div", { style: { background: T.card, border: "1px solid " + T.border, borderRadius: T.rCont, padding: 32 } }, children)));
+}
+
+function LoginView(){
+  const [email, setEmail] = useState("");
+  const [fase, setFase] = useState("form"); // form | enviando | enviado
+  const [erro, setErro] = useState(AUTH.erro);
+  const valido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  async function enviar(e){
+    e && e.preventDefault();
+    if(!valido) return;
+    setFase("enviando"); setErro("");
+    try{ await AUTH.pedirLink(email.trim().toLowerCase()); setFase("enviado"); }
+    catch(x){ setErro(x.message); setFase("form"); }
+  }
+  if(fase === "enviado") return h(TelaAcesso, null,
+    h("div", { className: "ov", style: { marginBottom: 12 } }, "acesso"),
+    h("h1", { style: { fontSize: 30, lineHeight: 1.1, marginBottom: 14 } }, "Confira seu e-mail"),
+    h("p", { style: { color: T.mutedLight, marginBottom: 24 } }, "Se ", h("strong", { style: { color: T.text } }, email.trim()), " tiver acesso ao painel, um link de entrada chega em instantes. Abra o link neste mesmo navegador. Ele vale por uma hora e funciona uma vez só."),
+    h(Btn, { outline: true, onClick: () => setFase("form") }, "Usar outro e-mail"));
+  return h(TelaAcesso, null,
+    h("div", { className: "ov", style: { marginBottom: 12 } }, "acesso"),
+    h("h1", { style: { fontSize: 30, lineHeight: 1.1, marginBottom: 14 } }, "Entrar no painel"),
+    h("p", { style: { color: T.mutedLight, marginBottom: 24 } }, "Digite o e-mail cadastrado. Você recebe um link para entrar, sem senha."),
+    h("form", { onSubmit: enviar },
+      h("label", { htmlFor: "email", style: { display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 } }, "E-mail"),
+      h("input", { id: "email", type: "email", autoComplete: "email", value: email, onChange: e => setEmail(e.target.value), placeholder: "voce@empresa.com.br" }),
+      erro && h("p", { role: "alert", style: { color: T.red, fontSize: 13, fontWeight: 600, marginTop: 10 } }, erro),
+      h("div", { style: { marginTop: 20 } },
+        h("button", { type: "submit", className: "btn btn-p", disabled: !valido || fase === "enviando", style: { width: "100%" } }, fase === "enviando" ? "Enviando..." : "Enviar link de acesso"))));
+}
+
+function SemAcessoView(){
+  return h(TelaAcesso, null,
+    h("div", { className: "ov", style: { marginBottom: 12 } }, "acesso"),
+    h("h1", { style: { fontSize: 30, lineHeight: 1.1, marginBottom: 14 } }, "Acesso ainda não liberado"),
+    h("p", { style: { color: T.mutedLight, marginBottom: 24 } }, "Você entrou como ", h("strong", { style: { color: T.text } }, AUTH.email()), ", mas esse e-mail ainda não está ligado a nenhuma marca. Fale com a HDG HUB para liberar."),
+    h(Btn, { outline: true, onClick: () => AUTH.sair() }, "Sair"));
+}
+
+function Root(){
+  const [fase, setFase] = useState("checando"); // checando | entrar | sem-acesso | dentro
+  useEffect(() => { (async () => {
+    AUTH.load(); AUTH.fromHash();
+    if(!AUTH.s || !(await AUTH.token())){ setFase("entrar"); return; }
+    try{
+      const a = await sbFetch("acessos?select=papel,client_id");
+      if(!a || !a.length){ setFase("sem-acesso"); return; }
+      window.HDG_PAPEL = a.some(x => x.papel === "admin") ? "admin" : "cliente";
+      setFase("dentro");
+    }catch(e){ AUTH.save(null); AUTH.erro = "Sua sessão terminou. Entre de novo."; setFase("entrar"); }
+  })(); }, []);
+  if(fase === "checando") return h("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" } }, h("div", { className: "spinner" }));
+  if(fase === "entrar") return h(LoginView);
+  if(fase === "sem-acesso") return h(SemAcessoView);
+  return h(App);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(Root));
 </script>
 </body>
 </html>
